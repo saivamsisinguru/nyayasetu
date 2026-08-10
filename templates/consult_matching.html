@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Finding your advocate...{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <h2>Finding your advocate</h2>
+        <p class="text-muted mt-3">
+            Identifying the right verified advocate in <strong>{{ session.get('city', 'your city') }}</strong> 
+            for <strong>{{ session.get('sub_type', 'your issue').replace('_', ' ').title() }}</strong>...
+        </p>
+        <p class="text-muted small">Usually under 2 minutes.</p>
+        
+        <!-- Spinner -->
+        <div class="spinner-border text-primary mt-4" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Searching...</span>
+        </div>
+        
+        <p class="mt-4 text-muted small">You can close this page — we'll notify you when an advocate accepts.</p>
+    </div>
+</div>
+
+<script>
+// Simulate finding an advocate after 3 seconds, then redirect to advocate card
+setTimeout(function() {
+    window.location.href = "{{ url_for('consult_advocate_card') }}";
+}, 3000);
+</script>
+{% endblock %}
