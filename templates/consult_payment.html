@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Complete Payment{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4>Confirm Your Consultation</h4>
+                <p class="text-muted">
+                    {{ advocate_name }} has accepted your request.
+                </p>
+                
+                <hr>
+                
+                <div class="mb-2"><strong>Session Details:</strong></div>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Advocate</span>
+                        <span>{{ advocate_name }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Date & Time</span>
+                        <span>Today, 7:30 PM</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Duration</span>
+                        <span>30 minutes</span>
+                    </li>
+                </ul>
+                
+                <hr>
+                
+                <div class="mb-2"><strong>Fee Breakdown:</strong></div>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Advocate's Consultation Fee</span>
+                        <span>₹{{ advocate_fee }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Platform Convenience Fee</span>
+                        <span>₹{{ platform_fee }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between fw-bold">
+                        <span>Total</span>
+                        <span>₹{{ total }}</span>
+                    </li>
+                </ul>
+                
+                <p class="text-muted small">
+                    <em>The advocate's fee goes directly to the advocate. 
+                    The platform fee is charged separately for this service.</em>
+                </p>
+                
+                <hr>
+                
+                <!-- Simulated Payment -->
+                <form method="POST" action="{{ url_for('consult_confirmation') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Select Payment Method</label>
+                        <select class="form-select" required>
+                            <option>UPI (PhonePe / Google Pay / Paytm)</option>
+                            <option>Credit / Debit Card</option>
+                            <option>Net Banking</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        Pay ₹{{ total }}
+                    </button>
+                </form>
+                
+                <p class="text-muted small mt-3 text-center">
+                    <em>For demo purposes, clicking "Pay" will simulate a successful payment.</em>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
