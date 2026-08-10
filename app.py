@@ -61,6 +61,11 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/consult/matching')
+@login_required
+def consult_matching():
+    return render_template('consult_matching.html')
+    
 # --- Run ---
 if __name__ == '__main__':
     with app.app_context():
