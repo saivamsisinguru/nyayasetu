@@ -89,6 +89,20 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/consult/payment')
+@login_required
+def consult_payment():
+    # In real app, this data comes from the accepted request
+    advocate_name = session.get('advocate_name', 'Adv. Priya Menon')
+    advocate_fee = session.get('advocate_fee', 1200)
+    platform_fee = session.get('platform_fee', 149)
+    total = advocate_fee + platform_fee
+    return render_template('consult_payment.html', 
+                         advocate_name=advocate_name,
+                         advocate_fee=advocate_fee,
+                         platform_fee=platform_fee,
+                         total=total)
+
 # --- Run ---
 if __name__ == '__main__':
     with app.app_context():
