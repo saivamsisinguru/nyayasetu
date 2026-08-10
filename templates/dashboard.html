@@ -1,30 +1,115 @@
-{% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
-{% block content %}
-<h1>Welcome, {{ current_user.phone }}</h1>
-<p>You are logged in.</p>
+from flask import Flask, render_template, redirect, url_for, request, session
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from config import Config
+from models import db, User
 
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Get Legal Advice</h5>
-                <p class="card-text">Consult with a verified advocate about your legal issue.</p>
-                <a href="{{ url_for('consult_issue') }}" class="btn btn-primary">Start New Consultation</a>
-            </div>
-        </div>
-    </div>
-    
-    {% if session.get('advocate_name') %}
-    <div class="col-md-6">
-        <div class="card border-warning">
-            <div class="card-body">
-                <h5 class="card-title">Demo: Advocate Accepted</h5>
-                <p class="card-text">Simulate that the advocate accepted your request and proceed to payment.</p>
-                <a href="{{ url_for('consult_payment') }}" class="btn btn-warning">Go to Payment (Demo)</a>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
+app = Flask(__name__)
+app.config.from_object(Config)
+
+db.init_app(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
+
+# --- Routes ---
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        phone = request.form['phone'].strip()
+        user = User.query.filter_by(phone=phone).first()
+        if not user:
+            user = User(phone=phone, name='New User')
+            db.session.add(user)
+            db.session.commit()
+        login_user(user)
+        session.clear()  # Clear old session data on fresh login
+        return redirect(url_for('dashboard'))
+    return render_template('login.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/consult/issue', methods=['GET', 'POST'])
+@login_required
+def consult_issue():
+    if request.method == 'POST':
+        session['legal_area'] = request.form.get('legal_area')
+        session['sub_type'] = request.form.get('sub_type')
+        session['city'] = request.form.get('city')
+        return redirect(url_for('consult_context'))
+    return render_template('consult_issue.html')
+
+@app.route('/consult/context', methods=['GET', 'POST'])
+@login_required
+def consult_context():
+    if request.method == 'POST':
+        session['description'] = request.form.get('description')
+        return redirect(url_for('consult_matching'))
+    return render_template('consult_context.html')
+
+@app.route('/consult/matching')
+@login_required
+def consult_matching():
+    return render_template('consult_matching.html')
+
+@app.route('/consult/advocate-card')
+@login_required
+def consult_advocate_card():
+    advocate = {
+        'name': 'Adv. Priya Menon',
+        'bar_council': 'Bar Council of Karnataka',
+        'enrolment_year': 2012,
+        'courts': 'High Court, Family Court',
+        'languages': 'Kannada, English, Hindi',
+        'first_slot': 'Today, 7:30 PM (30 min)',
+        'fee': 1200
+    }
+    return render_template('consult_advocate_card.html', advocate=advocate)
+
+@app.route('/consult/request', methods=['POST'])
+@login_required
+def consult_request():
+    session['advocate_name'] = 'Adv. Priya Menon'
+    session['advocate_fee'] = 1200
+    session['platform_fee'] = 149
+    return render_template('consult_request_sent.html')
+
+@app.route('/consult/payment')
+@login_required
+def consult_payment():
+    advocate_name = session.get('advocate_name', 'Adv. Priya Menon')
+    advocate_fee = session.get('advocate_fee', 1200)
+    platform_fee = session.get('platform_fee', 149)
+    total = advocate_fee + platform_fee
+    return render_template('consult_payment.html',
+                         advocate_name=advocate_name,
+                         advocate_fee=advocate_fee,
+                         platform_fee=platform_fee,
+                         total=total)
+
+@app.route('/consult/confirmation', methods=['POST'])
+@login_required
+def consult_confirmation():
+    return render_template('consult_confirmation.html')
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    session.clear()  # Clear session on logout
+    return redirect(url_for('index'))
+
+# --- Run ---
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
