@@ -30,7 +30,7 @@ def login():
             db.session.add(user)
             db.session.commit()
         login_user(user)
-        return redirect(url_for('consult_matching'))
+        return redirect(url_for('dashboard'))   # ← Goes to dashboard
     return render_template('login.html')
 
 @app.route('/dashboard')
@@ -53,13 +53,8 @@ def consult_issue():
 def consult_context():
     if request.method == 'POST':
         session['description'] = request.form.get('description')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('consult_matching'))   # ← Goes to matching
     return render_template('consult_context.html')
-
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
 
 @app.route('/consult/matching')
 @login_required
@@ -69,8 +64,27 @@ def consult_matching():
 @app.route('/consult/advocate-card')
 @login_required
 def consult_advocate_card():
-    return "<h1>Advocate Card - Coming Soon</h1>"
-    
+    advocate = {
+        'name': 'Adv. Priya Menon',
+        'bar_council': 'Bar Council of Karnataka',
+        'enrolment_year': 2012,
+        'courts': 'High Court, Family Court',
+        'languages': 'Kannada, English, Hindi',
+        'first_slot': 'Today, 7:30 PM (30 min)',
+        'fee': 1200
+    }
+    return render_template('consult_advocate_card.html', advocate=advocate)
+
+@app.route('/consult/request', methods=['POST'])
+@login_required
+def consult_request():
+    return "<h1>Request Sent - Awaiting Acceptance (Coming Soon)</h1>"
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
 # --- Run ---
 if __name__ == '__main__':
     with app.app_context():
