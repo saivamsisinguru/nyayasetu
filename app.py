@@ -78,7 +78,11 @@ def consult_advocate_card():
 @app.route('/consult/request', methods=['POST'])
 @login_required
 def consult_request():
-    return "<h1>Request Sent - Awaiting Acceptance (Coming Soon)</h1>"
+    # Store request info in session
+    session['advocate_name'] = 'Adv. Priya Menon'
+    session['advocate_fee'] = 1200
+    session['platform_fee'] = 149
+    return render_template('consult_request_sent.html')
 
 @app.route('/logout')
 def logout():
