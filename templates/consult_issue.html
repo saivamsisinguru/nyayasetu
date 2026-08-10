@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}What's your legal issue?{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <h2>What legal help do you need?</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label for="legal_area" class="form-label">Legal Area</label>
+                <select class="form-select" id="legal_area" name="legal_area" required onchange="updateSubTypes()">
+                    <option value="">-- Select --</option>
+                    <option value="property">Property</option>
+                    <option value="family">Family</option>
+                    <option value="criminal">Criminal</option>
+                    <option value="employment">Employment</option>
+                    <option value="startup">Startup</option>
+                    <option value="nri">NRI Matters</option>
+                    <option value="consumer">Consumer</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="sub_type" class="form-label">Sub-type</label>
+                <select class="form-select" id="sub_type" name="sub_type" required disabled>
+                    <option value="">-- First choose an area --</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="city" class="form-label">City / Court Location</label>
+                <input type="text" class="form-control" id="city" name="city" placeholder="e.g. Mumbai" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Continue</button>
+        </form>
+    </div>
+</div>
+
+<script>
+const subTypes = {
+    property: ["Title Dispute", "Tenant Eviction", "Registration Delay", "Inheritance", "Other"],
+    family: ["Divorce", "Custody", "Maintenance", "Domestic Violence", "Other"],
+    criminal: ["Bail", "FIR Filing", "Cheque Bounce", "Defamation", "Other"],
+    employment: ["Wrongful Termination", "Sexual Harassment", "Non-compete", "Other"],
+    startup: ["Incorporation", "Funding", "IP Registration", "Other"],
+    nri: ["Property Dispute", "Marriage/Divorce", "Investments", "Other"],
+    consumer: ["Defective Product", "Service Deficiency", "Medical Negligence", "Other"],
+    other: ["Other"]
+};
+
+function updateSubTypes() {
+    const area = document.getElementById('legal_area').value;
+    const subSelect = document.getElementById('sub_type');
+    subSelect.innerHTML = '<option value="">-- Select --</option>';
+    if (area && subTypes[area]) {
+        subTypes[area].forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub.toLowerCase().replace(' ', '_');
+            opt.textContent = sub;
+            subSelect.appendChild(opt);
+        });
+        subSelect.disabled = false;
+    } else {
+        subSelect.disabled = true;
+    }
+}
+</script>
+{% endblock %}
