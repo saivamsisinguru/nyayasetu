@@ -30,7 +30,7 @@ def login():
             db.session.add(user)
             db.session.commit()
         login_user(user)
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('consult_matching'))
     return render_template('login.html')
 
 @app.route('/dashboard')
