@@ -15,7 +15,7 @@
         </div>
     </div>
     
-    <!-- Demo: Simulate Advocate Acceptance -->
+    {% if session.get('advocate_name') %}
     <div class="col-md-6">
         <div class="card border-warning">
             <div class="card-body">
@@ -25,5 +25,6 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
