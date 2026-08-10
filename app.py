@@ -103,6 +103,11 @@ def consult_payment():
                          platform_fee=platform_fee,
                          total=total)
 
+@app.route('/consult/confirmation', methods=['POST'])
+@login_required
+def consult_confirmation():
+    return render_template('consult_confirmation.html')
+
 # --- Run ---
 if __name__ == '__main__':
     with app.app_context():
