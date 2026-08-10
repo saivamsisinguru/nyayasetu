@@ -65,6 +65,11 @@ def logout():
 @login_required
 def consult_matching():
     return render_template('consult_matching.html')
+
+@app.route('/consult/advocate-card')
+@login_required
+def consult_advocate_card():
+    return "<h1>Advocate Card - Coming Soon</h1>"
     
 # --- Run ---
 if __name__ == '__main__':
