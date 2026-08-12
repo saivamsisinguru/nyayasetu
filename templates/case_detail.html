@@ -20,6 +20,7 @@
                 {% if case.description %}
                 <p><strong>Description:</strong> {{ case.description }}</p>
                 {% endif %}
+                <p><strong>Retainer Balance:</strong> ₹{{ case.retainer_balance }}</p>
             </div>
         </div>
     </div>
@@ -27,82 +28,122 @@
 
 <!-- Tabs -->
 <ul class="nav nav-tabs mt-4" id="caseTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">Timeline</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="fees-tab" data-bs-toggle="tab" data-bs-target="#fees" type="button" role="tab">Fee Ledger</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">Documents</button>
-    </li>
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#timeline">Timeline</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#fees">Fee Ledger</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#documents">Documents</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#messages">Messages</button></li>
 </ul>
 
-<div class="tab-content mt-3" id="caseTabsContent">
-    <!-- Timeline Tab -->
-    <div class="tab-pane fade show active" id="timeline" role="tabpanel">
+<div class="tab-content mt-3">
+    <!-- Timeline -->
+    <div class="tab-pane fade show active" id="timeline">
         <div class="card">
             <div class="card-body">
+                {% if timeline %}
                 <ul class="list-group list-group-flush">
+                    {% for event in timeline %}
                     <li class="list-group-item">
-                        <span class="badge bg-primary me-2">Completed</span>
-                        Consultation booked with {{ case.advocate_name }}
+                        <span class="badge bg-primary me-2">{{ event.event_type }}</span>
+                        {{ event.description }}
+                        <br><small class="text-muted">{{ event.created_at.strftime('%d %b %Y, %H:%M') }}</small>
                     </li>
-                    <li class="list-group-item">
-                        <span class="badge bg-primary me-2">Completed</span>
-                        Payment of ₹{{ case.total_paid }} received
-                    </li>
-                    <li class="list-group-item text-muted">
-                        <span class="badge bg-secondary me-2">Upcoming</span>
-                        Case review and next steps
-                    </li>
+                    {% endfor %}
                 </ul>
+                {% else %}
+                <p class="text-muted">No events yet.</p>
+                {% endif %}
             </div>
         </div>
     </div>
     
-    <!-- Fee Ledger Tab -->
-    <div class="tab-pane fade" id="fees" role="tabpanel">
+    <!-- Fee Ledger -->
+    <div class="tab-pane fade" id="fees">
         <div class="card">
             <div class="card-body">
+                {% if fees %}
                 <table class="table">
                     <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                        </tr>
+                        <tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr>
                     </thead>
                     <tbody>
+                        {% for fee in fees %}
                         <tr>
-                            <td>{{ case.created_at.strftime('%d %b %Y') }}</td>
-                            <td>Consultation Fee ({{ case.advocate_name }})</td>
-                            <td>₹{{ case.advocate_fee }}</td>
-                            <td><span class="badge bg-success">Paid</span></td>
+                            <td>{{ fee.created_at.strftime('%d %b %Y') }}</td>
+                            <td>{{ fee.description }}</td>
+                            <td>₹{{ fee.amount }}</td>
+                            <td>
+                                {% if fee.status == 'Paid' %}
+                                <span class="badge bg-success">Paid</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
                         </tr>
-                        <tr>
-                            <td>{{ case.created_at.strftime('%d %b %Y') }}</td>
-                            <td>Platform Convenience Fee</td>
-                            <td>₹{{ case.platform_fee }}</td>
-                            <td><span class="badge bg-success">Paid</span></td>
-                        </tr>
+                        {% endfor %}
                         <tr class="fw-bold">
                             <td colspan="2">Total Paid</td>
                             <td colspan="2">₹{{ case.total_paid }}</td>
                         </tr>
                     </tbody>
                 </table>
+                {% else %}
+                <p class="text-muted">No fee entries yet.</p>
+                {% endif %}
             </div>
         </div>
     </div>
     
-    <!-- Documents Tab -->
-    <div class="tab-pane fade" id="documents" role="tabpanel">
+    <!-- Documents -->
+    <div class="tab-pane fade" id="documents">
         <div class="card">
-            <div class="card-body text-center py-5">
-                <p class="text-muted">Documents will appear here once uploaded.</p>
-                <button class="btn btn-outline-primary" disabled>Upload Document (Coming Soon)</button>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('upload_document', case_id=case.id) }}" enctype="multipart/form-data" class="mb-3">
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="document" required>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+                
+                {% if documents %}
+                <ul class="list-group">
+                    {% for doc in documents %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>📄 {{ doc.filename }}</span>
+                        <small class="text-muted">{{ doc.uploaded_at.strftime('%d %b %Y, %H:%M') }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No documents uploaded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Messages -->
+    <div class="tab-pane fade" id="messages">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                    {% if messages %}
+                        {% for msg in messages %}
+                        <div class="mb-2">
+                            <strong>{{ 'You' if msg.sender == 'client' else case.advocate_name }}:</strong>
+                            <span>{{ msg.content }}</span>
+                            <br><small class="text-muted">{{ msg.created_at.strftime('%d %b, %H:%M') }}</small>
+                        </div>
+                        <hr>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No messages yet. Start the conversation.</p>
+                    {% endif %}
+                </div>
+                <form method="POST" action="{{ url_for('send_message', case_id=case.id) }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="message" placeholder="Type your message..." required>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
