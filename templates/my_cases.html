@@ -2,61 +2,63 @@
 {% block title %}My Cases{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mt-2">
-    <h1><i class="bi bi-folder2-open me-2"></i>My Cases</h1>
-    <a href="{{ url_for('consult_issue') }}" class="btn btn-primary">
+    <div>
+        <h2><i class="bi bi-folder2-open me-2 text-accent"></i>My Cases</h2>
+        <p class="text-muted">Your legal matters, all in one place.</p>
+    </div>
+    <a href="{{ url_for('consult_issue') }}" class="btn btn-accent">
         <i class="bi bi-plus-circle me-1"></i> New Case
     </a>
 </div>
-<p class="text-muted">Your legal matters, all in one place.</p>
 
 {% if cases %}
 <div class="row mt-4 g-4">
     {% for case in cases %}
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <h5 class="card-title">
-                        <i class="bi bi-briefcase me-2 text-primary"></i>
-                        {{ case.legal_area | title }} - {{ case.sub_type | replace('_', ' ') | title }}
-                    </h5>
-                    <span class="badge bg-success">
-                        <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i>{{ case.status }}
-                    </span>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col-6">
-                        <p class="mb-1"><strong><i class="bi bi-person me-1"></i>Advocate:</strong></p>
-                        <p class="text-muted">{{ case.advocate_name }}</p>
-                    </div>
-                    <div class="col-6">
-                        <p class="mb-1"><strong><i class="bi bi-geo-alt me-1"></i>City:</strong></p>
-                        <p class="text-muted">{{ case.city }}</p>
-                    </div>
-                    <div class="col-6">
-                        <p class="mb-1"><strong><i class="bi bi-calendar me-1"></i>Filed:</strong></p>
-                        <p class="text-muted">{{ case.created_at.strftime('%d %b %Y') }}</p>
-                    </div>
-                    <div class="col-6">
-                        <p class="mb-1"><strong><i class="bi bi-currency-rupee me-1"></i>Total Paid:</strong></p>
-                        <p class="text-muted">₹{{ case.total_paid }}</p>
-                    </div>
-                </div>
-                <a href="{{ url_for('case_detail', case_id=case.id) }}" class="btn btn-primary btn-sm w-100 mt-2">
-                    <i class="bi bi-eye me-1"></i> View Case
-                </a>
+        <div class="card h-100 p-4">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="card-title">
+                    <i class="bi bi-briefcase me-2 text-accent"></i>
+                    {{ case.legal_area | title }} - {{ case.sub_type | replace('_', ' ') | title }}
+                </h5>
+                <span class="badge bg-success">
+                    <i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>{{ case.status }}
+                </span>
             </div>
+            <hr>
+            <div class="row">
+                <div class="col-6">
+                    <p class="mb-1 text-muted small">Advocate</p>
+                    <p><i class="bi bi-person me-1"></i>{{ case.advocate_name }}</p>
+                </div>
+                <div class="col-6">
+                    <p class="mb-1 text-muted small">City</p>
+                    <p><i class="bi bi-geo-alt me-1"></i>{{ case.city }}</p>
+                </div>
+                <div class="col-6">
+                    <p class="mb-1 text-muted small">Filed</p>
+                    <p><i class="bi bi-calendar me-1"></i>{{ case.created_at.strftime('%d %b %Y') }}</p>
+                </div>
+                <div class="col-6">
+                    <p class="mb-1 text-muted small">Total Paid</p>
+                    <p class="text-success"><i class="bi bi-currency-rupee me-1"></i>{{ case.total_paid }}</p>
+                </div>
+            </div>
+            <a href="{{ url_for('case_detail', case_id=case.id) }}" class="btn btn-outline-accent w-100 mt-2">
+                <i class="bi bi-eye me-1"></i> View Case
+            </a>
         </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
 <div class="text-center mt-5 pt-5">
-    <i class="bi bi-folder-x" style="font-size: 4rem; color: #ccc;"></i>
-    <h4 class="mt-3">No cases yet</h4>
+    <div class="icon-circle mb-3" style="width: 100px; height: 100px;">
+        <i class="bi bi-folder-x" style="font-size: 3rem; color: #64748b;"></i>
+    </div>
+    <h4>No cases yet</h4>
     <p class="text-muted">Start a consultation to create your first case.</p>
-    <a href="{{ url_for('consult_issue') }}" class="btn btn-primary mt-2">
+    <a href="{{ url_for('consult_issue') }}" class="btn btn-accent mt-2">
         <i class="bi bi-plus-circle me-1"></i> Get Legal Advice
     </a>
 </div>
