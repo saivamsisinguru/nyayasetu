@@ -8,8 +8,12 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     name = db.Column(db.String(100))
+    email = db.Column(db.String(120))
     city = db.Column(db.String(100))
+    language = db.Column(db.String(50))
     is_lawyer = db.Column(db.Boolean, default=False)
+    onboarding_complete = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Case(db.Model):
     id = db.Column(db.Integer, primary_key=True)
