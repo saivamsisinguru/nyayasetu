@@ -4,7 +4,9 @@
 <div class="d-flex justify-content-between align-items-center mt-2">
     <div>
         <h2><i class="bi bi-speedometer2 me-2 text-accent"></i>Dashboard</h2>
-        <p class="text-muted">Welcome back, {{ current_user.phone }}</p>
+        <p class="text-muted">
+            Welcome back, <strong style="color: #ff6b35;">{{ current_user.name or current_user.phone }}</strong>
+        </p>
     </div>
 </div>
 
@@ -31,6 +33,23 @@
             <p class="card-text">View your ongoing cases, timelines, and fee ledgers.</p>
             <a href="{{ url_for('my_cases') }}" class="btn btn-outline-accent mt-auto w-100">
                 <i class="bi bi-folder me-1"></i> View My Cases
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 p-4 text-center">
+            <div class="icon-circle mb-3">
+                <i class="bi bi-person-circle"></i>
+            </div>
+            <h5 class="card-title">My Profile</h5>
+            <p class="card-text">
+                <strong>{{ current_user.name or 'Not set' }}</strong><br>
+                {{ current_user.city or 'City not set' }}<br>
+                <small class="text-muted">{{ current_user.phone }}</small>
+            </p>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary mt-auto w-100">
+                <i class="bi bi-box-arrow-right me-1"></i> Logout
             </a>
         </div>
     </div>
