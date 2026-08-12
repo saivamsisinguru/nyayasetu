@@ -1,10 +1,19 @@
 from flask import Flask, render_template, redirect, url_for, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_session import Session
 from config import Config
 from models import db, User
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Use server-side sessions (filesystem)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = './flask_session'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'nyayasetu_'
+Session(app)
 
 db.init_app(app)
 login_manager = LoginManager(app)
@@ -30,7 +39,8 @@ def login():
             db.session.add(user)
             db.session.commit()
         login_user(user)
-        return redirect(url_for('dashboard'))   # ← Goes to dashboard
+        session.clear()  # Clear server-side session
+        return redirect(url_for('dashboard'))
     return render_template('login.html')
 
 @app.route('/dashboard')
@@ -53,7 +63,7 @@ def consult_issue():
 def consult_context():
     if request.method == 'POST':
         session['description'] = request.form.get('description')
-        return redirect(url_for('consult_matching'))   # ← Goes to matching
+        return redirect(url_for('consult_matching'))
     return render_template('consult_context.html')
 
 @app.route('/consult/matching')
@@ -78,26 +88,21 @@ def consult_advocate_card():
 @app.route('/consult/request', methods=['POST'])
 @login_required
 def consult_request():
-    # Store request info in session
     session['advocate_name'] = 'Adv. Priya Menon'
     session['advocate_fee'] = 1200
     session['platform_fee'] = 149
     return render_template('consult_request_sent.html')
 
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
-
 @app.route('/consult/payment')
 @login_required
 def consult_payment():
-    # In real app, this data comes from the accepted request
-    advocate_name = session.get('advocate_name', 'Adv. Priya Menon')
+    if not session.get('advocate_name'):
+        return redirect(url_for('dashboard'))
+    advocate_name = session.get('advocate_name')
     advocate_fee = session.get('advocate_fee', 1200)
     platform_fee = session.get('platform_fee', 149)
     total = advocate_fee + platform_fee
-    return render_template('consult_payment.html', 
+    return render_template('consult_payment.html',
                          advocate_name=advocate_name,
                          advocate_fee=advocate_fee,
                          platform_fee=platform_fee,
@@ -108,8 +113,14 @@ def consult_payment():
 def consult_confirmation():
     return render_template('consult_confirmation.html')
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    session.clear()  # Clear server-side session
+    return redirect(url_for('index'))
+
 # --- Run ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
