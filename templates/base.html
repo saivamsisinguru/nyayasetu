@@ -387,19 +387,16 @@
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="bi bi-lightning-charge-fill me-2"></i>NyayaSetu
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">
-                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                            </a>
+            <a class="navbar-brand" href="{{ url_for('index') }}" style="display: flex; align-items: center;">
+    <span style="display: inline-block; background: linear-gradient(135deg, #ff6b35, #ffa500); width: 45px; height: 45px; border-radius: 12px; text-align: center; line-height: 45px; margin-right: 12px; box-shadow: 0 4px 15px rgba(255,107,53,0.4);">
+        <i class="bi bi-scale" style="color: white; font-size: 1.4rem;"></i>
+    </span>
+    <span>
+        <span style="color: #ff6b35; font-weight: 800; font-size: 1.3rem;">Nyaya</span><span style="color: white; font-weight: 800; font-size: 1.3rem;">Setu</span>
+        <br>
+        <small style="color: #a0b4c8; font-size: 0.65rem; letter-spacing: 1px;">YOUR CASE, CONNECTED</small>
+    </span>
+</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('my_cases') }}">
