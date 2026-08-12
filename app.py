@@ -29,11 +29,18 @@ def login():
         phone = request.form['phone'].strip()
         user = User.query.filter_by(phone=phone).first()
         if not user:
-            user = User(phone=phone, name='New User')
+            user = User(phone=phone)
             db.session.add(user)
             db.session.commit()
+        
         login_user(user)
-        return redirect(url_for('dashboard'))
+        
+        # Check if onboarding is complete
+        if not user.onboarding_complete:
+            return redirect(url_for('onboarding'))
+        else:
+            return redirect(url_for('dashboard'))
+    
     return render_template('login.html')
 
 @app.route('/dashboard')
