@@ -1,10 +1,13 @@
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
-from models import db, User, Case
+from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry
+from datetime import datetime
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db.init_app(app)
 login_manager = LoginManager(app)
@@ -103,7 +106,6 @@ def consult_payment():
 @app.route('/consult/confirmation', methods=['POST'])
 @login_required
 def consult_confirmation():
-    # Create a case record from the consultation
     new_case = Case(
         user_id=current_user.id,
         advocate_name=session.get('advocate_name', 'Adv. Priya Menon'),
@@ -119,14 +121,34 @@ def consult_confirmation():
     db.session.add(new_case)
     db.session.commit()
     
+    # Add initial timeline event
+    event = TimelineEvent(
+        case_id=new_case.id,
+        event_type='Consultation',
+        description='Consultation booked and payment received'
+    )
+    db.session.add(event)
+    
+    # Add fee entries
+    fee1 = FeeEntry(
+        case_id=new_case.id,
+        description='Consultation Fee',
+        amount=session.get('advocate_fee', 1200),
+        status='Paid'
+    )
+    fee2 = FeeEntry(
+        case_id=new_case.id,
+        description='Platform Fee',
+        amount=session.get('platform_fee', 149),
+        status='Paid'
+    )
+    db.session.add(fee1)
+    db.session.add(fee2)
+    db.session.commit()
+    
     # Clear consultation session data
-    session.pop('advocate_name', None)
-    session.pop('advocate_fee', None)
-    session.pop('platform_fee', None)
-    session.pop('legal_area', None)
-    session.pop('sub_type', None)
-    session.pop('city', None)
-    session.pop('description', None)
+    for key in ['advocate_name', 'advocate_fee', 'platform_fee', 'legal_area', 'sub_type', 'city', 'description']:
+        session.pop(key, None)
     
     return render_template('consult_confirmation.html')
 
@@ -144,7 +166,100 @@ def case_detail(case_id):
     case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
     if not case:
         return redirect(url_for('my_cases'))
-    return render_template('case_detail.html', case=case)
+    
+    timeline = TimelineEvent.query.filter_by(case_id=case.id).order_by(TimelineEvent.created_at.desc()).all()
+    fees = FeeEntry.query.filter_by(case_id=case.id).order_by(FeeEntry.created_at.desc()).all()
+    documents = Document.query.filter_by(case_id=case.id).order_by(Document.uploaded_at.desc()).all()
+    messages = Message.query.filter_by(case_id=case.id).order_by(Message.created_at.asc()).all()
+    
+    return render_template('case_detail.html', 
+                         case=case, 
+                         timeline=timeline, 
+                         fees=fees, 
+                         documents=documents,
+                         messages=messages)
+
+# Document Upload
+@app.route('/case/<int:case_id>/upload', methods=['POST'])
+@login_required
+def upload_document(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    
+    if 'document' in request.files:
+        file = request.files['document']
+        if file.filename:
+            # Create upload folder if not exists
+            upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(case_id))
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            file_path = os.path.join(upload_folder, file.filename)
+            file.save(file_path)
+            
+            doc = Document(
+                case_id=case_id,
+                filename=file.filename,
+                file_path=file_path
+            )
+            db.session.add(doc)
+            db.session.commit()
+            
+            flash('Document uploaded successfully!', 'success')
+    
+    return redirect(url_for('case_detail', case_id=case_id))
+
+# Send Message
+@app.route('/case/<int:case_id>/message', methods=['POST'])
+@login_required
+def send_message(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    
+    content = request.form.get('message', '').strip()
+    if content:
+        msg = Message(
+            case_id=case_id,
+            sender='client',
+            content=content
+        )
+        db.session.add(msg)
+        db.session.commit()
+    
+    return redirect(url_for('case_detail', case_id=case_id))
+
+# Lawyer: Log Hearing (simulated)
+@app.route('/case/<int:case_id>/log-hearing', methods=['POST'])
+@login_required
+def log_hearing(case_id):
+    # In real app, check if current_user.is_lawyer
+    case = Case.query.get(case_id)
+    if not case:
+        return redirect(url_for('my_cases'))
+    
+    hearing_fee = 5000  # Default hearing fee
+    description = request.form.get('description', 'Hearing attended')
+    
+    # Add timeline event
+    event = TimelineEvent(
+        case_id=case_id,
+        event_type='Hearing',
+        description=description
+    )
+    db.session.add(event)
+    
+    # Add fee entry
+    fee = FeeEntry(
+        case_id=case_id,
+        description=description,
+        amount=hearing_fee,
+        status='Pending'
+    )
+    db.session.add(fee)
+    db.session.commit()
+    
+    return redirect(url_for('case_detail', case_id=case_id))
 
 @app.route('/logout')
 def logout():
