@@ -1,21 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask_session import Session
 from config import Config
 from models import db, User
 
 app = Flask(__name__)
 app.config.from_object(Config)
-
-# Use server-side sessions (filesystem)
-# Use server-side sessions (filesystem)
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = './flask_session'
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_KEY_PREFIX'] = 'nyayasetu_'
-app.config['SECRET_KEY'] = 'nyayasetu-super-secret-key-2024'  # ← Must match
-Session(app)
 
 db.init_app(app)
 login_manager = LoginManager(app)
@@ -41,7 +30,6 @@ def login():
             db.session.add(user)
             db.session.commit()
         login_user(user)
-        session.clear()  # Clear server-side session
         return redirect(url_for('dashboard'))
     return render_template('login.html')
 
@@ -98,9 +86,9 @@ def consult_request():
 @app.route('/consult/payment')
 @login_required
 def consult_payment():
-    if not session.get('advocate_name'):
-        return redirect(url_for('dashboard'))
     advocate_name = session.get('advocate_name')
+    if not advocate_name:
+        return redirect(url_for('dashboard'))
     advocate_fee = session.get('advocate_fee', 1200)
     platform_fee = session.get('platform_fee', 149)
     total = advocate_fee + platform_fee
@@ -118,7 +106,7 @@ def consult_confirmation():
 @app.route('/logout')
 def logout():
     logout_user()
-    session.clear()  # Clear server-side session
+    session.clear()
     return redirect(url_for('index'))
 
 # --- Run ---
