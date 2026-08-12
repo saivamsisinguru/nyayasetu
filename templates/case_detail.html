@@ -28,15 +28,23 @@
 
 <!-- Tabs -->
 <ul class="nav nav-tabs mt-4" id="caseTabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#timeline">Timeline</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#fees">Fee Ledger</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#documents">Documents</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#messages">Messages</button></li>
+    <li class="nav-item">
+        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">Timeline</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="fees-tab" data-bs-toggle="tab" data-bs-target="#fees" type="button" role="tab">Fee Ledger</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">Documents</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab">Messages</button>
+    </li>
 </ul>
 
 <div class="tab-content mt-3">
     <!-- Timeline -->
-    <div class="tab-pane fade show active" id="timeline">
+    <div class="tab-pane fade" id="timeline" role="tabpanel">
         <div class="card">
             <div class="card-body">
                 {% if timeline %}
@@ -57,7 +65,7 @@
     </div>
     
     <!-- Fee Ledger -->
-    <div class="tab-pane fade" id="fees">
+    <div class="tab-pane fade" id="fees" role="tabpanel">
         <div class="card">
             <div class="card-body">
                 {% if fees %}
@@ -94,7 +102,7 @@
     </div>
     
     <!-- Documents -->
-    <div class="tab-pane fade" id="documents">
+    <div class="tab-pane fade" id="documents" role="tabpanel">
         <div class="card">
             <div class="card-body">
                 <form method="POST" action="{{ url_for('upload_document', case_id=case.id) }}" enctype="multipart/form-data" class="mb-3">
@@ -121,7 +129,7 @@
     </div>
     
     <!-- Messages -->
-    <div class="tab-pane fade" id="messages">
+    <div class="tab-pane fade" id="messages" role="tabpanel">
         <div class="card">
             <div class="card-body">
                 <div class="mb-3" style="max-height: 300px; overflow-y: auto;">
@@ -148,4 +156,25 @@
         </div>
     </div>
 </div>
+
+<script>
+// Remember which tab was active
+document.addEventListener('DOMContentLoaded', function() {
+    const activeTab = localStorage.getItem('activeCaseTab');
+    if (activeTab) {
+        const tab = document.querySelector(`[data-bs-target="#${activeTab}"]`);
+        if (tab) {
+            new bootstrap.Tab(tab).show();
+        }
+    }
+    
+    // Store active tab on click
+    document.querySelectorAll('#caseTabs button').forEach(button => {
+        button.addEventListener('click', function() {
+            const target = this.getAttribute('data-bs-target').replace('#', '');
+            localStorage.setItem('activeCaseTab', target);
+        });
+    });
+});
+</script>
 {% endblock %}
