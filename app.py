@@ -24,12 +24,20 @@ def index():
 def login():
     if request.method == 'POST':
         phone = request.form['phone'].strip()
+        print("DEBUG: Phone entered:", phone)
+        
         user = User.query.filter_by(phone=phone).first()
         if not user:
             user = User(phone=phone, name='New User')
             db.session.add(user)
             db.session.commit()
+            print("DEBUG: New user created with ID:", user.id)
+        else:
+            print("DEBUG: Existing user found, ID:", user.id)
+        
         login_user(user)
+        print("DEBUG: login_user called, is_authenticated:", current_user.is_authenticated)
+        
         return redirect(url_for('dashboard'))
     return render_template('login.html')
 
