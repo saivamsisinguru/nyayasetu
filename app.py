@@ -43,6 +43,23 @@ def login():
     
     return render_template('login.html')
 
+@app.route('/onboarding', methods=['GET', 'POST'])
+@login_required
+def onboarding():
+    if current_user.onboarding_complete:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        current_user.name = request.form.get('name', '').strip()
+        current_user.email = request.form.get('email', '').strip()
+        current_user.city = request.form.get('city', '').strip()
+        current_user.language = request.form.get('language', '').strip()
+        current_user.onboarding_complete = True
+        db.session.commit()
+        return redirect(url_for('dashboard'))
+    
+    return render_template('onboarding.html')
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
