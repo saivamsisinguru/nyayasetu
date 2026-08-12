@@ -26,6 +26,39 @@ class Case(db.Model):
     advocate_fee = db.Column(db.Integer, default=0)
     platform_fee = db.Column(db.Integer, default=0)
     total_paid = db.Column(db.Integer, default=0)
+    retainer_balance = db.Column(db.Integer, default=0)
     
-    def __repr__(self):
-        return f'<Case {self.id}: {self.legal_area} - {self.sub_type}>'
+    # Relationships
+    documents = db.relationship('Document', backref='case', lazy=True)
+    messages = db.relationship('Message', backref='case', lazy=True)
+    timeline_events = db.relationship('TimelineEvent', backref='case', lazy=True)
+    fee_entries = db.relationship('FeeEntry', backref='case', lazy=True)
+
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
+    filename = db.Column(db.String(200))
+    file_path = db.Column(db.String(500))
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
+    sender = db.Column(db.String(50))  # 'client' or 'lawyer'
+    content = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TimelineEvent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
+    event_type = db.Column(db.String(100))
+    description = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class FeeEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
+    description = db.Column(db.String(200))
+    amount = db.Column(db.Integer)
+    status = db.Column(db.String(20), default='Paid')  # Paid, Pending
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
