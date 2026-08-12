@@ -1,10 +1,19 @@
 from flask import Flask, render_template, redirect, url_for, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_session import Session
 from config import Config
 from models import db, User
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Use server-side sessions (filesystem)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = './flask_session'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'nyayasetu_'
+Session(app)
 
 db.init_app(app)
 login_manager = LoginManager(app)
@@ -30,7 +39,7 @@ def login():
             db.session.add(user)
             db.session.commit()
         login_user(user)
-        session.clear()  # ← Clear session on fresh login
+        session.clear()  # Clear server-side session
         return redirect(url_for('dashboard'))
     return render_template('login.html')
 
@@ -107,14 +116,11 @@ def consult_confirmation():
 @app.route('/logout')
 def logout():
     logout_user()
-    session.clear()  # ← Clear session on logout
+    session.clear()  # Clear server-side session
     return redirect(url_for('index'))
 
 # --- Run ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    # Get port from Render environment, fallback to 5000
-    import os
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(debug=True, host='0.0.0.0')
