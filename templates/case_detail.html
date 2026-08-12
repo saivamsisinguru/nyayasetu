@@ -43,26 +43,27 @@
 </ul>
 
 <div class="tab-content mt-3">
-    <!-- Timeline -->
-    <div class="tab-pane fade" id="timeline" role="tabpanel">
-        <div class="card">
-            <div class="card-body">
-                {% if timeline %}
-                <ul class="list-group list-group-flush">
-                    {% for event in timeline %}
-                    <li class="list-group-item">
-                        <span class="badge bg-primary me-2">{{ event.event_type }}</span>
-                        {{ event.description }}
-                        <br><small class="text-muted">{{ event.created_at.strftime('%d %b %Y, %H:%M') }}</small>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted">No events yet.</p>
-                {% endif %}
-            </div>
+   <!-- Timeline Tab -->
+<div class="tab-pane fade" id="timeline" role="tabpanel">
+    <div class="card">
+        <div class="card-body">
+            {% if timeline %}
+            <ul class="list-group list-group-flush">
+                {% for event in timeline %}
+                <li class="list-group-item" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: white;">
+                    <span class="badge" style="background: rgba(255, 107, 53, 0.2); color: #ff6b35;">{{ event.event_type }}</span>
+                    {{ event.description }}
+                    <br>
+                    <small style="color: #64748b;">{{ event.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No events yet.</p>
+            {% endif %}
         </div>
     </div>
+</div>
     
     <!-- Fee Ledger -->
     <div class="tab-pane fade" id="fees" role="tabpanel">
@@ -109,31 +110,32 @@
 </div>
     
     <!-- Documents -->
-    <div class="tab-pane fade" id="documents" role="tabpanel">
-        <div class="card">
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('upload_document', case_id=case.id) }}" enctype="multipart/form-data" class="mb-3">
-                    <div class="input-group">
-                        <input type="file" class="form-control" name="document" required>
-                        <button type="submit" class="btn btn-primary">Upload</button>
-                    </div>
-                </form>
-                
-                {% if documents %}
-                <ul class="list-group">
-                    {% for doc in documents %}
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>📄 {{ doc.filename }}</span>
-                        <small class="text-muted">{{ doc.uploaded_at.strftime('%d %b %Y, %H:%M') }}</small>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-muted">No documents uploaded yet.</p>
-                {% endif %}
-            </div>
+    <!-- Documents Tab -->
+<div class="tab-pane fade" id="documents" role="tabpanel">
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('upload_document', case_id=case.id) }}" enctype="multipart/form-data" class="mb-3">
+                <div class="input-group">
+                    <input type="file" class="form-control" name="document" required style="background: #0a1628; border: 1px solid #1e3a5f; color: white;">
+                    <button type="submit" class="btn btn-accent">Upload</button>
+                </div>
+            </form>
+            
+            {% if documents %}
+            <ul class="list-group">
+                {% for doc in documents %}
+                <li class="list-group-item d-flex justify-content-between" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: white;">
+                    <span>📄 {{ doc.filename }}</span>
+                    <small style="color: #64748b;">{{ doc.uploaded_at.strftime('%d %b %Y, %H:%M') }}</small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No documents uploaded yet.</p>
+            {% endif %}
         </div>
     </div>
+</div>
     
     <!-- Messages -->
     <!-- Messages Tab -->
