@@ -1,7 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
-from models import db, User
 from models import db, User, Case
 
 app = Flask(__name__)
@@ -14,6 +13,8 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+# --- Routes ---
 
 @app.route('/')
 def index():
@@ -36,6 +37,8 @@ def login():
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+
+# --- Consult Module Routes ---
 
 @app.route('/consult/issue', methods=['GET', 'POST'])
 @login_required
@@ -100,7 +103,23 @@ def consult_payment():
 @app.route('/consult/confirmation', methods=['POST'])
 @login_required
 def consult_confirmation():
-    # Clear consultation session data after successful payment
+    # Create a case record from the consultation
+    new_case = Case(
+        user_id=current_user.id,
+        advocate_name=session.get('advocate_name', 'Adv. Priya Menon'),
+        legal_area=session.get('legal_area', ''),
+        sub_type=session.get('sub_type', ''),
+        city=session.get('city', ''),
+        description=session.get('description', ''),
+        advocate_fee=session.get('advocate_fee', 1200),
+        platform_fee=session.get('platform_fee', 149),
+        total_paid=session.get('advocate_fee', 1200) + session.get('platform_fee', 149),
+        status='Active'
+    )
+    db.session.add(new_case)
+    db.session.commit()
+    
+    # Clear consultation session data
     session.pop('advocate_name', None)
     session.pop('advocate_fee', None)
     session.pop('platform_fee', None)
@@ -108,7 +127,24 @@ def consult_confirmation():
     session.pop('sub_type', None)
     session.pop('city', None)
     session.pop('description', None)
+    
     return render_template('consult_confirmation.html')
+
+# --- Engage Module Routes ---
+
+@app.route('/my-cases')
+@login_required
+def my_cases():
+    cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.created_at.desc()).all()
+    return render_template('my_cases.html', cases=cases)
+
+@app.route('/case/<int:case_id>')
+@login_required
+def case_detail(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    return render_template('case_detail.html', case=case)
 
 @app.route('/logout')
 def logout():
@@ -116,6 +152,7 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+# --- Run ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
