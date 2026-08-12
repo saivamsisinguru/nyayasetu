@@ -34,6 +34,11 @@
             min-height: 100vh;
         }
         
+        /* Force ALL text to be light colored */
+        body * {
+            color: var(--text-primary);
+        }
+        
         .navbar {
             background: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
@@ -75,17 +80,17 @@
         }
         
         .card-title {
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
             font-weight: 700;
         }
         
         .card-text {
-            color: var(--text-secondary);
+            color: var(--text-secondary) !important;
         }
         
         .btn-accent {
             background: var(--accent);
-            color: white;
+            color: white !important;
             border: none;
             border-radius: 10px;
             padding: 12px 28px;
@@ -98,12 +103,12 @@
             background: var(--accent-hover);
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(255, 107, 53, 0.3);
-            color: white;
+            color: white !important;
         }
         
         .btn-outline-accent {
             border: 2px solid var(--accent);
-            color: var(--accent);
+            color: var(--accent) !important;
             border-radius: 10px;
             padding: 10px 24px;
             font-weight: 600;
@@ -113,13 +118,13 @@
         
         .btn-outline-accent:hover {
             background: var(--accent);
-            color: white;
+            color: white !important;
             box-shadow: 0 8px 20px rgba(255, 107, 53, 0.2);
         }
         
         .btn-outline-secondary {
             border: 1px solid var(--border-color);
-            color: var(--text-secondary);
+            color: var(--text-secondary) !important;
             border-radius: 10px;
             padding: 10px 24px;
             font-weight: 500;
@@ -129,36 +134,45 @@
         
         .btn-outline-secondary:hover {
             border-color: var(--text-secondary);
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
             background: rgba(255, 255, 255, 0.05);
         }
         
         .form-control, .form-select {
-            background: var(--bg-dark);
+            background: var(--bg-dark) !important;
             border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 12px 18px;
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
             transition: all 0.3s;
         }
         
         .form-control:focus, .form-select:focus {
-            background: var(--bg-dark);
+            background: var(--bg-dark) !important;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
         }
         
         .form-control::placeholder {
-            color: #64748b;
+            color: #64748b !important;
         }
         
         .form-label {
-            color: var(--text-secondary);
+            color: var(--text-secondary) !important;
             font-weight: 600;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+        
+        .form-text {
+            color: #94a3b8 !important;
+        }
+        
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
         }
         
         .badge {
@@ -166,37 +180,38 @@
             padding: 6px 14px;
             font-weight: 600;
             font-size: 0.8rem;
+            color: white !important;
         }
         
         .badge.bg-success {
             background: rgba(16, 185, 129, 0.2) !important;
-            color: var(--success);
+            color: var(--success) !important;
         }
         
         .badge.bg-warning {
             background: rgba(245, 158, 11, 0.2) !important;
-            color: var(--warning);
+            color: var(--warning) !important;
         }
         
         .badge.bg-danger {
             background: rgba(239, 68, 68, 0.2) !important;
-            color: var(--danger);
+            color: var(--danger) !important;
         }
         
         .badge.bg-primary {
             background: rgba(255, 107, 53, 0.2) !important;
-            color: var(--accent);
+            color: var(--accent) !important;
         }
         
         .alert {
             border-radius: 12px;
             border: 1px solid var(--border-color);
             background: var(--bg-card);
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
         }
         
         .table {
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
             background: var(--bg-card);
             border-radius: 12px;
             overflow: hidden;
@@ -204,7 +219,7 @@
         
         .table th {
             background: var(--bg-dark);
-            color: var(--text-secondary);
+            color: var(--text-secondary) !important;
             border-bottom: 1px solid var(--border-color);
             padding: 15px;
             font-weight: 600;
@@ -216,7 +231,15 @@
         .table td {
             border-bottom: 1px solid var(--border-color);
             padding: 15px;
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
+        }
+        
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table tr:hover td {
+            background: rgba(255, 107, 53, 0.05);
         }
         
         .nav-tabs {
@@ -224,7 +247,7 @@
         }
         
         .nav-tabs .nav-link {
-            color: var(--text-secondary);
+            color: var(--text-secondary) !important;
             border: none;
             border-bottom: 2px solid transparent;
             font-weight: 600;
@@ -233,12 +256,12 @@
         }
         
         .nav-tabs .nav-link:hover {
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
             background: transparent;
         }
         
         .nav-tabs .nav-link.active {
-            color: var(--accent);
+            color: var(--accent) !important;
             border-bottom: 2px solid var(--accent);
             background: transparent;
         }
@@ -246,7 +269,7 @@
         .list-group-item {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            color: var(--text-primary);
+            color: var(--text-primary) !important;
         }
         
         hr {
@@ -258,7 +281,7 @@
         }
         
         .text-muted {
-            color: #64748b !important;
+            color: #94a3b8 !important;
         }
         
         .text-success {
@@ -267,6 +290,10 @@
         
         .text-warning {
             color: var(--warning) !important;
+        }
+        
+        .text-danger {
+            color: var(--danger) !important;
         }
         
         .text-accent {
@@ -302,6 +329,20 @@
             font-size: 1.3rem;
             color: var(--text-secondary);
             line-height: 1.6;
+        }
+        
+        .btn-close {
+            filter: invert(1);
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .modal-header, .modal-footer {
+            border-color: var(--border-color);
         }
     </style>
 </head>
