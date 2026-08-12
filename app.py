@@ -99,6 +99,14 @@ def consult_payment():
 @app.route('/consult/confirmation', methods=['POST'])
 @login_required
 def consult_confirmation():
+    # Clear consultation session data after successful payment
+    session.pop('advocate_name', None)
+    session.pop('advocate_fee', None)
+    session.pop('platform_fee', None)
+    session.pop('legal_area', None)
+    session.pop('sub_type', None)
+    session.pop('city', None)
+    session.pop('description', None)
     return render_template('consult_confirmation.html')
 
 @app.route('/logout')
