@@ -8,11 +8,13 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Use server-side sessions (filesystem)
+# Use server-side sessions (filesystem)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './flask_session'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'nyayasetu_'
+app.config['SECRET_KEY'] = 'nyayasetu-super-secret-key-2024'  # ← Must match
 Session(app)
 
 db.init_app(app)
