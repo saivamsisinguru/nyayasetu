@@ -1,37 +1,50 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h1>Welcome, {{ current_user.phone }}</h1>
-<p>You are logged in.</p>
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h1><i class="bi bi-person-circle me-2"></i>Welcome, {{ current_user.phone }}</h1>
+        <p class="text-muted">You are logged in to your dashboard.</p>
+    </div>
+</div>
 
-<div class="row mt-4">
+<div class="row mt-4 g-4">
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Get Legal Advice</h5>
-                <p class="card-text">Consult with a verified advocate about your legal issue.</p>
-                <a href="{{ url_for('consult_issue') }}" class="btn btn-primary">Start New Consultation</a>
+        <div class="card h-100 p-3">
+            <div class="card-body text-center">
+                <i class="bi bi-search" style="font-size: 3rem; color: #1a237e;"></i>
+                <h5 class="card-title mt-3">Get Legal Advice</h5>
+                <p class="card-text text-muted">Consult with a verified advocate about your legal issue.</p>
+                <a href="{{ url_for('consult_issue') }}" class="btn btn-primary mt-2 w-100">
+                    <i class="bi bi-plus-circle me-1"></i> Start Consultation
+                </a>
             </div>
         </div>
     </div>
     
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">My Cases</h5>
-                <p class="card-text">View your ongoing cases, timelines, and fee ledgers.</p>
-                <a href="{{ url_for('my_cases') }}" class="btn btn-outline-primary">View My Cases</a>
+        <div class="card h-100 p-3">
+            <div class="card-body text-center">
+                <i class="bi bi-folder2-open" style="font-size: 3rem; color: #1a237e;"></i>
+                <h5 class="card-title mt-3">My Cases</h5>
+                <p class="card-text text-muted">View your ongoing cases, timelines, and fee ledgers.</p>
+                <a href="{{ url_for('my_cases') }}" class="btn btn-outline-primary mt-2 w-100">
+                    <i class="bi bi-folder me-1"></i> View My Cases
+                </a>
             </div>
         </div>
     </div>
     
     {% if session.get('advocate_name') %}
     <div class="col-md-4">
-        <div class="card border-warning">
-            <div class="card-body">
-                <h5 class="card-title">Demo: Advocate Accepted</h5>
-                <p class="card-text">Proceed to payment for your consultation.</p>
-                <a href="{{ url_for('consult_payment') }}" class="btn btn-warning">Go to Payment (Demo)</a>
+        <div class="card h-100 p-3 border-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-credit-card" style="font-size: 3rem; color: #f57c00;"></i>
+                <h5 class="card-title mt-3">Payment Pending</h5>
+                <p class="card-text text-muted">Your advocate accepted. Complete payment to confirm.</p>
+                <a href="{{ url_for('consult_payment') }}" class="btn btn-warning mt-2 w-100">
+                    <i class="bi bi-credit-card me-1"></i> Go to Payment
+                </a>
             </div>
         </div>
     </div>
