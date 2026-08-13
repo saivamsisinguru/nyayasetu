@@ -720,6 +720,46 @@ def admin_dashboard():
                          recent_lawyers=recent_lawyers,
                          recent_cases=recent_cases)
 
+@app.route('/admin/clients')
+@login_required
+def admin_clients():
+    if not isinstance(current_user, Admin):
+        return redirect(url_for('index'))
+    clients = User.query.order_by(User.created_at.desc()).all()
+    # Add total_paid for each client (via relationship)
+    # We'll pass clients as is; total_paid can be computed in template if we add a property, but for simplicity we can aggregate here
+    from sqlalchemy import func
+    clients_data = []
+    for client in clients:
+        total_paid = db.session.query(func.coalesce(func.sum(Payment.amount), 0)).filter(Payment.user_id == client.id).scalar()
+        client.total_paid = total_paid  # dynamically assign
+        clients_data.append(client)
+    return render_template('admin_clients.html', clients=clients_data)
+
+@app.route('/admin/suspend-client/<int:client_id>')
+@login_required
+def admin_suspend_client(client_id):
+    if not isinstance(current_user, Admin):
+        return redirect(url_for('index'))
+    client = User.query.get(client_id)
+    if client:
+        client.is_active = False
+        db.session.commit()
+        flash(f'{client.name or client.phone} suspended.', 'warning')
+    return redirect(url_for('admin_clients'))
+
+@app.route('/admin/unsuspend-client/<int:client_id>')
+@login_required
+def admin_unsuspend_client(client_id):
+    if not isinstance(current_user, Admin):
+        return redirect(url_for('index'))
+    client = User.query.get(client_id)
+    if client:
+        client.is_active = True
+        db.session.commit()
+        flash(f'{client.name or client.phone} unsuspended.', 'success')
+    return redirect(url_for('admin_clients'))
+    
 @app.route('/admin/verify/<int:lawyer_id>')
 @login_required
 def admin_verify_lawyer(lawyer_id):
