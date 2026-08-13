@@ -66,3 +66,20 @@ class FeeEntry(db.Model):
     amount = db.Column(db.Integer)
     status = db.Column(db.String(20), default='Paid')  # Paid, Pending
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(200))
+    message = db.Column(db.String(500))
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Payment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'))
+    amount = db.Column(db.Integer)
+    payment_type = db.Column(db.String(50))  # Consultation Fee, Hearing Fee, Platform Fee, Retainer
+    status = db.Column(db.String(20), default='Paid')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
