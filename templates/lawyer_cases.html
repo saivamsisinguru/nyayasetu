@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}My Cases{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <h2><i class="bi bi-folder2-open me-2 text-accent"></i>Assigned Cases</h2>
+    <a href="{{ url_for('lawyer_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Dashboard
+    </a>
+</div>
+
+<div class="card mt-4 p-4">
+    {% if cases %}
+        {% for case in cases %}
+        <div class="d-flex justify-content-between align-items-center p-3 mb-3" style="background: #0a1628; border-radius: 10px; border: 1px solid #1e3a5f;">
+            <div>
+                <strong>{{ case.legal_area | title }} - {{ case.sub_type | replace('_', ' ') | title }}</strong>
+                <br>
+                <small class="text-muted">Client: {{ case.client.phone }}</small>
+                <br>
+                <small class="text-muted">Status: {{ case.status }}</small>
+            </div>
+            <div class="text-end">
+                <span class="badge" style="background: rgba(255, 107, 53, 0.2); color: #ff6b35;">₹{{ case.total_paid }}</span>
+                <br>
+                <a href="{{ url_for('lawyer_case_detail', case_id=case.id) }}" class="btn btn-sm btn-outline-accent mt-2">View</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted text-center py-5">No cases assigned yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
