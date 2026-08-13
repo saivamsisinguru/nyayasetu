@@ -310,7 +310,8 @@
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="{% if current_user.is_authenticated %}{% if current_user.__class__.__name__ == 'Lawyer' %}{{ url_for('lawyer_dashboard') }}{% else %}{{ url_for('dashboard') }}{% endif %}{% else %}{{ url_for('index') }}{% endif %}" style="display: flex; align-items: center;">
+            {% set user_type = current_user.__class__.__name__ if current_user.is_authenticated else 'Guest' %}
+            <a class="navbar-brand" href="{% if user_type == 'Admin' %}{{ url_for('admin_dashboard') }}{% elif user_type == 'Lawyer' %}{{ url_for('lawyer_dashboard') }}{% elif user_type == 'User' %}{{ url_for('dashboard') }}{% else %}{{ url_for('index') }}{% endif %}" style="display: flex; align-items: center;">
                 <span style="display: inline-block; background: linear-gradient(135deg, #ff6b35, #ffa500); width: 45px; height: 45px; border-radius: 12px; text-align: center; line-height: 45px; margin-right: 12px; box-shadow: 0 4px 15px rgba(255,107,53,0.4);">
                     <i class="bi bi-scale" style="color: white; font-size: 1.4rem;"></i>
                 </span>
@@ -326,7 +327,39 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     {% if current_user.is_authenticated %}
-                        {% if current_user.__class__.__name__ == 'Lawyer' %}
+                        {% if user_type == 'Admin' %}
+                            <!-- Admin Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_lawyers') }}">
+                                    <i class="bi bi-people me-1"></i> Lawyers
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_clients') }}">
+                                    <i class="bi bi-person me-1"></i> Clients
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_payments') }}">
+                                    <i class="bi bi-currency-rupee me-1"></i> Payments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_requests') }}">
+                                    <i class="bi bi-bell me-1"></i> Requests
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin_logout') }}">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                                </a>
+                            </li>
+                        {% elif user_type == 'Lawyer' %}
                             <!-- Lawyer Navigation -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('lawyer_dashboard') }}">
@@ -341,6 +374,11 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('lawyer_cases') }}">
                                     <i class="bi bi-folder2-open me-1"></i> Cases
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('lawyer_profile') }}">
+                                    <i class="bi bi-person-badge me-1"></i> Profile
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -385,6 +423,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('lawyer_login') }}">
                                 <i class="bi bi-person-badge me-1"></i> Advocate Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_login') }}">
+                                <i class="bi bi-shield-lock me-1"></i> Admin
                             </a>
                         </li>
                     {% endif %}
