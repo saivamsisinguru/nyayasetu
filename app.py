@@ -1,9 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
-from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment, Lawyer, ConsultationRequest, LawyerRegion, LawyerLanguage, LawyerPracticeArea
-from datetime import datetime
 from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment, Lawyer, ConsultationRequest, LawyerRegion, LawyerLanguage, LawyerPracticeArea, Admin
+from datetime import datetime
 import os
 import random
 
@@ -18,12 +17,18 @@ login_manager.login_message = 'Please log in to access this page.'
 
 @login_manager.user_loader
 def load_user(user_id):
+    # Try User first
     user = db.session.get(User, int(user_id))
     if user:
         return user
+    # Then Lawyer
     lawyer = db.session.get(Lawyer, int(user_id))
     if lawyer:
         return lawyer
+    # Then Admin
+    admin = db.session.get(Admin, int(user_id))
+    if admin:
+        return admin
     return None
 
 # --- Routes ---
@@ -98,14 +103,12 @@ def consult_context():
 @app.route('/consult/matching')
 @login_required
 def consult_matching():
-    # Parse fee range
     fee_range = session.get('fee_range', '1000-2000')
     if '-' in fee_range:
         parts = fee_range.split('-')
         min_fee = int(parts[0])
         max_fee = int(parts[1])
     else:
-        # "10000+" means min 10000, max very high
         min_fee = 10000
         max_fee = 1000000
 
@@ -117,36 +120,28 @@ def consult_matching():
     sub_type = session.get('sub_type', '')
 
     matching_lawyers = []
-    lawyers = Lawyer.query.filter_by(is_available=True).all()
+    lawyers = Lawyer.query.filter_by(is_available=True, verification_status='verified').all()
 
     for lawyer in lawyers:
-        # Fee filter
         if not (min_fee <= lawyer.consultation_fee <= max_fee):
             continue
 
-        # Region filter
         lawyer_districts = [r.district for r in lawyer.regions]
         lawyer_states = [r.state for r in lawyer.regions]
         if district:
-            if district not in lawyer_districts:
-                # Check if lawyer covers entire state
-                if state not in lawyer_states:
-                    continue
+            if district not in lawyer_districts and state not in lawyer_states:
+                continue
 
-        # Language filter
         lawyer_langs = [l.language for l in lawyer.languages]
         if language and language not in lawyer_langs:
             continue
 
-        # Experience filter
         if experience and lawyer.experience_level != experience:
             continue
 
-        # Practice area filter
-        if legal_area:
-            lawyer_areas = [pa.area for pa in lawyer.practice_areas]
-            if legal_area not in lawyer_areas:
-                continue
+        lawyer_areas = [pa.area for pa in lawyer.practice_areas]
+        if legal_area and legal_area not in lawyer_areas:
+            continue
 
         matching_lawyers.append(lawyer)
 
@@ -191,7 +186,6 @@ def consult_request():
     session['advocate_fee'] = lawyer.consultation_fee
     session['platform_fee'] = 149
 
-    # Create consultation request for the lawyer
     fee_range = session.get('fee_range', '')
     if '-' in fee_range:
         parts = fee_range.split('-')
@@ -268,11 +262,7 @@ def consult_confirmation():
     db.session.add(payment1)
     db.session.add(payment2)
 
-    notif = Notification(
-        user_id=current_user.id,
-        title='Case Created',
-        message=f'Your case for {session.get("legal_area", "")} has been created successfully.'
-    )
+    notif = Notification(user_id=current_user.id, title='Case Created', message=f'Your case for {session.get("legal_area", "")} has been created successfully.')
     db.session.add(notif)
     db.session.commit()
 
@@ -281,8 +271,7 @@ def consult_confirmation():
 
     return render_template('consult_confirmation.html')
 
-# --- Engage Module Routes (Client Side) ---
-# ... (keep existing my_cases, case_detail, upload_document, send_message, add_case_update, simulate_lawyer_update, profile, notifications routes unchanged)
+# --- Engage Module Routes (Client) ---
 
 @app.route('/my-cases')
 @login_required
@@ -321,7 +310,91 @@ def case_detail(case_id):
     updates = CaseUpdate.query.filter_by(case_id=case.id).order_by(CaseUpdate.created_at.desc()).all()
     return render_template('case_detail.html', case=case, timeline=timeline, fees=fees, documents=documents, messages=messages, updates=updates)
 
-# ... (keep remaining client routes unchanged, but ensure profile route uses current_user fields)
+@app.route('/case/<int:case_id>/upload', methods=['POST'])
+@login_required
+def upload_document(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    if 'document' in request.files:
+        file = request.files['document']
+        if file.filename:
+            upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(case_id))
+            os.makedirs(upload_folder, exist_ok=True)
+            file_path = os.path.join(upload_folder, file.filename)
+            file.save(file_path)
+            doc = Document(case_id=case_id, filename=file.filename, file_path=file_path)
+            db.session.add(doc)
+            db.session.commit()
+            flash('Document uploaded successfully!', 'success')
+    return redirect(url_for('case_detail', case_id=case_id))
+
+@app.route('/case/<int:case_id>/message', methods=['POST'])
+@login_required
+def send_message(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    content = request.form.get('message', '').strip()
+    if content:
+        msg = Message(case_id=case_id, sender='client', content=content)
+        db.session.add(msg)
+        notif = Notification(user_id=current_user.id, title='Message Sent', message=f'Your message has been sent to {case.advocate_name}.')
+        db.session.add(notif)
+        db.session.commit()
+    return redirect(url_for('case_detail', case_id=case_id))
+
+@app.route('/case/<int:case_id>/update', methods=['POST'])
+@login_required
+def add_case_update(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    update_type = request.form.get('update_type', 'Note')
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    if title or description:
+        update = CaseUpdate(case_id=case_id, update_type=update_type, title=title, description=description)
+        db.session.add(update)
+        event = TimelineEvent(case_id=case_id, event_type=update_type, description=title or description)
+        db.session.add(event)
+        notif = Notification(user_id=current_user.id, title=f'Case Update: {update_type}', message=title or description)
+        db.session.add(notif)
+        if update_type == 'Hearing':
+            case.status = 'Hearing Scheduled'
+        elif update_type == 'Order':
+            case.status = 'Order Received'
+        elif update_type == 'Resolved':
+            case.status = 'Resolved'
+        db.session.commit()
+        flash('Case updated successfully!', 'success')
+    return redirect(url_for('case_detail', case_id=case_id))
+
+@app.route('/case/<int:case_id>/simulate-lawyer-update')
+@login_required
+def simulate_lawyer_update(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    updates = [
+        {'type': 'Hearing', 'title': 'Hearing Scheduled', 'description': 'Next hearing scheduled for 25 Aug 2026 at City Civil Court.'},
+        {'type': 'Filing', 'title': 'Additional Documents Filed', 'description': 'Affidavit and supporting documents filed with the court.'},
+        {'type': 'Order', 'title': 'Court Order Received', 'description': 'The court has directed the respondent to file a reply within 2 weeks.'},
+        {'type': 'Note', 'title': 'Case Review', 'description': 'Advocate reviewed the case and prepared next steps.'}
+    ]
+    update = random.choice(updates)
+    case_update = CaseUpdate(case_id=case_id, update_type=update['type'], title=update['title'], description=update['description'])
+    db.session.add(case_update)
+    event = TimelineEvent(case_id=case_id, event_type=update['type'], description=update['title'])
+    db.session.add(event)
+    notif = Notification(user_id=current_user.id, title=f'Case Update: {update["type"]}', message=update['description'])
+    db.session.add(notif)
+    case.status = update['type']
+    db.session.commit()
+    flash(f'New case update: {update["title"]}', 'info')
+    return redirect(url_for('case_detail', case_id=case_id))
+
+# --- Profile Routes (Client) ---
 
 @app.route('/profile')
 @login_required
@@ -344,6 +417,7 @@ def edit_profile():
     return redirect(url_for('profile'))
 
 # --- Notifications Routes ---
+
 @app.route('/notifications')
 @login_required
 def notifications():
@@ -371,10 +445,12 @@ def lawyer_login():
             db.session.add(lawyer)
             db.session.commit()
         login_user(lawyer)
-        # Redirect to setup if profile incomplete
         if not lawyer.name or not lawyer.regions or not lawyer.languages:
             return redirect(url_for('lawyer_setup'))
-        return redirect(url_for('lawyer_dashboard'))
+        elif lawyer.verification_status != 'verified':
+            return redirect(url_for('lawyer_pending'))
+        else:
+            return redirect(url_for('lawyer_dashboard'))
     return render_template('lawyer_login.html')
 
 @app.route('/lawyer/setup', methods=['GET', 'POST'])
@@ -392,14 +468,13 @@ def lawyer_setup():
         current_user.experience_level = request.form.get('experience_level', 'Junior')
         current_user.consultation_fee = int(request.form.get('consultation_fee', 1200))
         current_user.hearing_fee = int(request.form.get('hearing_fee', 5000))
+        current_user.verification_status = 'pending'
 
-        # Clear existing related data
         LawyerRegion.query.filter_by(lawyer_id=current_user.id).delete()
         LawyerLanguage.query.filter_by(lawyer_id=current_user.id).delete()
         LawyerPracticeArea.query.filter_by(lawyer_id=current_user.id).delete()
         db.session.flush()
 
-        # Add regions (multiple) with requirement check
         region_states = request.form.getlist('region_state')
         region_districts = request.form.getlist('region_district')
         region_count = 0
@@ -408,20 +483,17 @@ def lawyer_setup():
                 region = LawyerRegion(lawyer_id=current_user.id, state=region_states[i], district=region_districts[i])
                 db.session.add(region)
                 region_count += 1
-
         if region_count == 0:
             db.session.rollback()
             flash('Please add at least one region you serve.', 'danger')
             return redirect(url_for('lawyer_setup'))
 
-        # Add languages
         langs = request.form.getlist('languages')
         for lang in langs:
             if lang:
                 l = LawyerLanguage(lawyer_id=current_user.id, language=lang)
                 db.session.add(l)
 
-        # Add practice areas
         areas = request.form.getlist('areas')
         for area in areas:
             pa = LawyerPracticeArea(lawyer_id=current_user.id, area=area, sub_type='')
@@ -429,18 +501,23 @@ def lawyer_setup():
 
         db.session.commit()
         flash('Profile updated successfully!', 'success')
-        return redirect(url_for('lawyer_dashboard'))
-
+        return redirect(url_for('lawyer_pending'))
     return render_template('lawyer_setup.html')
-    
+
+@app.route('/lawyer/pending')
+@login_required
+def lawyer_pending():
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('dashboard'))
+    return render_template('lawyer_pending.html')
+
 @app.route('/lawyer/dashboard')
 @login_required
 def lawyer_dashboard():
     if not isinstance(current_user, Lawyer):
         return redirect(url_for('dashboard'))
-    # Redirect to setup if profile not complete
-    if not current_user.name or not current_user.regions or not current_user.languages:
-        return redirect(url_for('lawyer_setup'))
+    if current_user.verification_status != 'verified':
+        return redirect(url_for('lawyer_pending'))
     pending_requests = ConsultationRequest.query.filter_by(status='Pending').all()
     active_cases = Case.query.all()
     total_earnings = sum([c.total_paid for c in active_cases])
@@ -451,7 +528,61 @@ def lawyer_dashboard():
                          total_earnings=total_earnings,
                          unread_messages=unread_messages)
 
-# ... (keep lawyer_requests, accept/decline, lawyer_cases, lawyer_case_detail, log hearing, message, upload routes unchanged except maybe adjust case retrieval)
+@app.route('/lawyer/profile')
+@login_required
+def lawyer_profile():
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('dashboard'))
+    return render_template('lawyer_profile.html')
+
+@app.route('/lawyer/profile/edit', methods=['GET', 'POST'])
+@login_required
+def lawyer_profile_edit():
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        current_user.name = request.form.get('name', '').strip()
+        current_user.email = request.form.get('email', '').strip()
+        enrolment_year = request.form.get('enrolment_year')
+        if enrolment_year:
+            current_user.enrolment_year = int(enrolment_year)
+        current_user.experience_level = request.form.get('experience_level', 'Junior')
+        current_user.consultation_fee = int(request.form.get('consultation_fee', 1200))
+        current_user.hearing_fee = int(request.form.get('hearing_fee', 5000))
+
+        LawyerRegion.query.filter_by(lawyer_id=current_user.id).delete()
+        LawyerLanguage.query.filter_by(lawyer_id=current_user.id).delete()
+        LawyerPracticeArea.query.filter_by(lawyer_id=current_user.id).delete()
+        db.session.flush()
+
+        region_states = request.form.getlist('region_state')
+        region_districts = request.form.getlist('region_district')
+        region_count = 0
+        for i in range(len(region_states)):
+            if region_states[i] and region_districts[i]:
+                region = LawyerRegion(lawyer_id=current_user.id, state=region_states[i], district=region_districts[i])
+                db.session.add(region)
+                region_count += 1
+        if region_count == 0:
+            db.session.rollback()
+            flash('Please add at least one region you serve.', 'danger')
+            return redirect(url_for('lawyer_profile_edit'))
+
+        langs = request.form.getlist('languages')
+        for lang in langs:
+            if lang:
+                l = LawyerLanguage(lawyer_id=current_user.id, language=lang)
+                db.session.add(l)
+
+        areas = request.form.getlist('areas')
+        for area in areas:
+            pa = LawyerPracticeArea(lawyer_id=current_user.id, area=area, sub_type='')
+            db.session.add(pa)
+
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('lawyer_profile'))
+    return render_template('lawyer_profile_edit.html')
 
 @app.route('/lawyer/requests')
 @login_required
@@ -556,13 +687,72 @@ def lawyer_logout():
     logout_user()
     return redirect(url_for('index'))
 
+# --- Admin Routes ---
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        phone = request.form['phone'].strip()
+        admin = Admin.query.filter_by(phone=phone).first()
+        if admin:
+            login_user(admin)
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Admin not found.', 'danger')
+    return render_template('admin_login.html')
+
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    if not isinstance(current_user, Admin):
+        return redirect(url_for('index'))
+    pending_lawyers = Lawyer.query.filter_by(verification_status='pending').all()
+    verified_lawyers = Lawyer.query.filter_by(verification_status='verified').all()
+    return render_template('admin_dashboard.html', pending=pending_lawyers, verified=verified_lawyers)
+
+@app.route('/admin/verify/<int:lawyer_id>')
+@login_required
+def admin_verify_lawyer(lawyer_id):
+    if not isinstance(current_user, Admin):
+        return redirect(url_for('index'))
+    lawyer = Lawyer.query.get(lawyer_id)
+    if lawyer:
+        lawyer.verification_status = 'verified'
+        db.session.commit()
+        flash(f'{lawyer.name} verified!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/reject/<int:lawyer_id>')
+@login_required
+def admin_reject_lawyer(lawyer_id):
+    if not isinstance(current_user, Admin):
+        return redirect(url_for('index'))
+    lawyer = Lawyer.query.get(lawyer_id)
+    if lawyer:
+        lawyer.verification_status = 'rejected'
+        db.session.commit()
+        flash(f'{lawyer.name} rejected.', 'info')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/logout')
+def admin_logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+# --- Logout (generic) ---
 @app.route('/logout')
 def logout():
     logout_user()
     session.clear()
     return redirect(url_for('index'))
 
+# --- Run ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # Seed admin if not exists
+        if not Admin.query.filter_by(phone='9999999999').first():
+            admin = Admin(phone='9999999999', name='NyayaSetu Admin')
+            db.session.add(admin)
+            db.session.commit()
     app.run(debug=True, host='0.0.0.0')
