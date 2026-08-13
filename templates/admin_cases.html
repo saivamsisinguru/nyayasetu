@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Manage Cases{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-folder2-open me-2 text-accent"></i>All Cases</h2>
+        <p class="text-muted">Read-only view of all legal matters on the platform</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Search/Filter (optional) -->
+<div class="card mt-4 p-3">
+    <form method="GET" action="{{ url_for('admin_cases') }}" class="row g-2">
+        <div class="col-md-4">
+            <input type="text" class="form-control" name="q" placeholder="Search by client, lawyer, area..." value="{{ request.args.get('q', '') }}">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" name="status">
+                <option value="">All Statuses</option>
+                <option value="Active" {% if request.args.get('status') == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Resolved" {% if request.args.get('status') == 'Resolved' %}selected{% endif %}>Resolved</option>
+                <option value="Hearing Scheduled" {% if request.args.get('status') == 'Hearing Scheduled' %}selected{% endif %}>Hearing Scheduled</option>
+                <option value="Hearing Completed" {% if request.args.get('status') == 'Hearing Completed' %}selected{% endif %}>Hearing Completed</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-accent w-100">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Cases Table -->
+<div class="card mt-4 p-4">
+    {% if cases %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Case ID</th>
+                    <th>Client</th>
+                    <th>Lawyer</th>
+                    <th>Area</th>
+                    <th>Status</th>
+                    <th>Total Paid (₹)</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for case in cases %}
+                <tr>
+                    <td>#{{ case.id }}</td>
+                    <td>{{ case.client.phone if case.client else 'N/A' }}</td>
+                    <td>{{ case.advocate_name or 'N/A' }}</td>
+                    <td>{{ case.legal_area | title }} - {{ case.sub_type | replace('_',' ') | title }}</td>
+                    <td>
+                        <span class="badge bg-success">{{ case.status }}</span>
+                    </td>
+                    <td>₹{{ case.total_paid }}</td>
+                    <td>{{ case.created_at.strftime('%d %b %Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_case_detail', case_id=case.id) }}" class="btn btn-sm btn-outline-accent">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-4">No cases found.</p>
+    {% endif %}
+</div>
+{% endblock %}
