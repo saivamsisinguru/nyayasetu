@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Matching Advocates{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <h2><i class="bi bi-people me-2 text-accent"></i>Matching Advocates</h2>
+    <a href="{{ url_for('consult_issue') }}" class="btn btn-outline-secondary">← Change Filters</a>
+</div>
+
+{% if lawyers %}
+<div class="row mt-4 g-4">
+    {% for lawyer in lawyers %}
+    <div class="col-md-4">
+        <div class="card h-100 p-4">
+            <div class="text-center mb-3">
+                <div class="icon-circle">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+                <h5 class="mt-2">{{ lawyer.name or 'Advocate' }}</h5>
+            </div>
+            <hr>
+            <p class="mb-1"><strong>Experience:</strong> {{ lawyer.experience_level }}</p>
+            <p class="mb-1"><strong>Fee:</strong> ₹{{ lawyer.consultation_fee }}</p>
+            <p class="mb-1"><strong>Languages:</strong> {{ lawyer.languages|map(attribute='language')|join(', ') }}</p>
+            <p class="mb-1"><strong>Regions:</strong> {{ lawyer.regions|map(attribute='district')|join(', ') }}</p>
+            <a href="{{ url_for('consult_advocate_card', lawyer_id=lawyer.id) }}" class="btn btn-accent w-100 mt-3">Select Advocate</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center mt-5">
+    <h4>No advocates found</h4>
+    <p class="text-muted">Try adjusting your filters.</p>
+    <a href="{{ url_for('consult_issue') }}" class="btn btn-accent">Back to Search</a>
+</div>
+{% endif %}
+{% endblock %}
