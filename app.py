@@ -127,6 +127,72 @@ def consult_payment():
                          platform_fee=platform_fee,
                          total=total)
 
+# --- Profile Routes ---
+
+@app.route('/profile')
+@login_required
+def profile():
+    payments = Payment.query.filter_by(user_id=current_user.id).order_by(Payment.created_at.desc()).all()
+    return render_template('profile.html', payments=payments)
+
+@app.route('/profile/edit', methods=['POST'])
+@login_required
+def edit_profile():
+    current_user.name = request.form.get('name', '').strip()
+    current_user.email = request.form.get('email', '').strip()
+    current_user.city = request.form.get('city', '').strip()
+    current_user.language = request.form.get('language', '').strip()
+    db.session.commit()
+    
+    # Create notification
+    notif = Notification(
+        user_id=current_user.id,
+        title='Profile Updated',
+        message='Your profile has been updated successfully.'
+    )
+    db.session.add(notif)
+    db.session.commit()
+    
+    flash('Profile updated successfully!', 'success')
+    return redirect(url_for('profile'))
+
+# --- Notifications Routes ---
+
+@app.route('/notifications')
+@login_required
+def notifications():
+    notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return render_template('notifications.html', notifications=notifs)
+
+@app.route('/notifications/read/<int:notif_id>')
+@login_required
+def mark_notification_read(notif_id):
+    notif = Notification.query.filter_by(id=notif_id, user_id=current_user.id).first()
+    if notif:
+        notif.is_read = True
+        db.session.commit()
+    return redirect(url_for('notifications'))
+
+# --- Search Cases ---
+
+@app.route('/my-cases/search')
+@login_required
+def search_cases():
+    query = request.args.get('q', '').strip()
+    if query:
+        cases = Case.query.filter(
+            Case.user_id == current_user.id,
+            db.or_(
+                Case.legal_area.ilike(f'%{query}%'),
+                Case.sub_type.ilike(f'%{query}%'),
+                Case.advocate_name.ilike(f'%{query}%'),
+                Case.city.ilike(f'%{query}%')
+            )
+        ).order_by(Case.created_at.desc()).all()
+    else:
+        cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.created_at.desc()).all()
+    return render_template('my_cases.html', cases=cases, search_query=query)
+
 @app.route('/consult/confirmation', methods=['POST'])
 @login_required
 def consult_confirmation():
