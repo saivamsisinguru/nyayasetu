@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
 
     cases = db.relationship('Case', backref='client', lazy=True)
     notifications = db.relationship('Notification', backref='user', lazy=True)
-    payments = db.relationship('Payment', backref='user', lazy=True)
+    payments = db.relationship('Payment', lazy=True)   # changed: removed backref
 
 class Lawyer(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
