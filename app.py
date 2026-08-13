@@ -5,6 +5,7 @@ from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, C
 from datetime import datetime
 import os
 import random
+from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment, Lawyer, ConsultationRequest
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -393,6 +394,157 @@ def mark_notification_read(notif_id):
 def logout():
     logout_user()
     session.clear()
+    return redirect(url_for('index'))
+
+# --- Lawyer Routes ---
+
+@app.route('/lawyer/login', methods=['GET', 'POST'])
+def lawyer_login():
+    if request.method == 'POST':
+        phone = request.form['phone'].strip()
+        lawyer = Lawyer.query.filter_by(phone=phone).first()
+        if not lawyer:
+            lawyer = Lawyer(phone=phone, name='New Lawyer')
+            db.session.add(lawyer)
+            db.session.commit()
+        login_user(lawyer)
+        return redirect(url_for('lawyer_dashboard'))
+    return render_template('lawyer_login.html')
+
+@app.route('/lawyer/dashboard')
+@login_required
+def lawyer_dashboard():
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('dashboard'))
+    
+    pending_requests = ConsultationRequest.query.filter_by(status='Pending').all()
+    active_cases = Case.query.all()
+    total_earnings = sum([c.total_paid for c in active_cases])
+    unread_messages = Message.query.filter_by(sender='client').count()
+    
+    return render_template('lawyer_dashboard.html',
+                         pending_requests=pending_requests,
+                         active_cases=active_cases,
+                         total_earnings=total_earnings,
+                         unread_messages=unread_messages)
+
+@app.route('/lawyer/requests')
+@login_required
+def lawyer_requests():
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('dashboard'))
+    requests = ConsultationRequest.query.filter_by(lawyer_id=current_user.id).order_by(ConsultationRequest.created_at.desc()).all()
+    return render_template('lawyer_requests.html', requests=requests)
+
+@app.route('/lawyer/request/<int:req_id>/accept')
+@login_required
+def accept_request(req_id):
+    req = ConsultationRequest.query.get(req_id)
+    if req:
+        req.status = 'Accepted'
+        db.session.commit()
+        flash('Request accepted!', 'success')
+    return redirect(url_for('lawyer_requests'))
+
+@app.route('/lawyer/request/<int:req_id>/decline')
+@login_required
+def decline_request(req_id):
+    req = ConsultationRequest.query.get(req_id)
+    if req:
+        req.status = 'Declined'
+        db.session.commit()
+        flash('Request declined.', 'info')
+    return redirect(url_for('lawyer_requests'))
+
+@app.route('/lawyer/cases')
+@login_required
+def lawyer_cases():
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('dashboard'))
+    cases = Case.query.all()
+    return render_template('lawyer_cases.html', cases=cases)
+
+@app.route('/lawyer/case/<int:case_id>')
+@login_required
+def lawyer_case_detail(case_id):
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('dashboard'))
+    case = Case.query.get(case_id)
+    if not case:
+        return redirect(url_for('lawyer_cases'))
+    
+    timeline = TimelineEvent.query.filter_by(case_id=case.id).order_by(TimelineEvent.created_at.desc()).all()
+    messages = Message.query.filter_by(case_id=case.id).order_by(Message.created_at.asc()).all()
+    documents = Document.query.filter_by(case_id=case.id).all()
+    
+    return render_template('lawyer_case_detail.html',
+                         case=case, timeline=timeline, messages=messages, documents=documents)
+
+@app.route('/lawyer/case/<int:case_id>/log-hearing', methods=['POST'])
+@login_required
+def lawyer_log_hearing(case_id):
+    case = Case.query.get(case_id)
+    if not case:
+        return redirect(url_for('lawyer_cases'))
+    
+    description = request.form.get('description', 'Hearing attended')
+    hearing_fee = current_user.hearing_fee if hasattr(current_user, 'hearing_fee') else 5000
+    
+    # Add timeline event
+    event = TimelineEvent(case_id=case_id, event_type='Hearing', description=description)
+    db.session.add(event)
+    
+    # Add fee entry
+    fee = FeeEntry(case_id=case_id, description=description, amount=hearing_fee, status='Pending')
+    db.session.add(fee)
+    
+    # Update case status
+    case.status = 'Hearing Completed'
+    db.session.commit()
+    
+    flash(f'Hearing logged. Fee of ₹{hearing_fee} added to client ledger.', 'success')
+    return redirect(url_for('lawyer_case_detail', case_id=case_id))
+
+@app.route('/lawyer/case/<int:case_id>/message', methods=['POST'])
+@login_required
+def lawyer_send_message(case_id):
+    case = Case.query.get(case_id)
+    if not case:
+        return redirect(url_for('lawyer_cases'))
+    
+    content = request.form.get('message', '').strip()
+    if content:
+        msg = Message(case_id=case_id, sender='lawyer', content=content)
+        db.session.add(msg)
+        db.session.commit()
+    
+    return redirect(url_for('lawyer_case_detail', case_id=case_id))
+
+@app.route('/lawyer/case/<int:case_id>/upload', methods=['POST'])
+@login_required
+def lawyer_upload_document(case_id):
+    case = Case.query.get(case_id)
+    if not case:
+        return redirect(url_for('lawyer_cases'))
+    
+    if 'document' in request.files:
+        file = request.files['document']
+        if file.filename:
+            upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(case_id))
+            os.makedirs(upload_folder, exist_ok=True)
+            file_path = os.path.join(upload_folder, file.filename)
+            file.save(file_path)
+            
+            doc = Document(case_id=case_id, filename=file.filename, file_path=file_path)
+            db.session.add(doc)
+            db.session.commit()
+            flash('Document uploaded!', 'success')
+    
+    return redirect(url_for('lawyer_case_detail', case_id=case_id))
+
+@app.route('/lawyer/logout')
+def lawyer_logout():
+    logout_user()
     return redirect(url_for('index'))
 
 # --- Run ---
