@@ -2,45 +2,120 @@
 {% block title %}Admin Dashboard{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mt-2">
-    <h2><i class="bi bi-shield-lock me-2 text-accent"></i>Admin Dashboard</h2>
-    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary">Logout</a>
+    <div>
+        <h2><i class="bi bi-shield-lock me-2 text-accent"></i>Admin Dashboard</h2>
+        <p class="text-muted">Platform overview and monitoring</p>
+    </div>
+    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-box-arrow-right me-1"></i> Logout
+    </a>
 </div>
 
-<div class="row mt-4">
+<!-- Key Metrics -->
+<div class="row mt-4 g-4">
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h3 class="text-accent">{{ total_clients }}</h3>
+            <p class="text-muted mb-0">Total Clients</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h3 class="text-accent">{{ total_lawyers }}</h3>
+            <p class="text-muted mb-0">Total Lawyers</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h3 class="text-accent">{{ total_cases }}</h3>
+            <p class="text-muted mb-0">Total Cases</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <h3 class="text-success">₹{{ total_payments }}</h3>
+            <p class="text-muted mb-0">Payments Collected</p>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Verification Alert -->
+{% if pending_lawyers_count > 0 %}
+<div class="alert alert-warning mt-4" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);">
+    <div class="d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle me-2"></i><strong>{{ pending_lawyers_count }}</strong> lawyer(s) awaiting verification</span>
+        <a href="{{ url_for('admin_lawyers') }}" class="btn btn-sm btn-outline-warning">Review</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Links -->
+<div class="row mt-4 g-4">
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <i class="bi bi-people" style="font-size: 2rem; color: #ff6b35;"></i>
+            <h5 class="mt-2">Manage Lawyers</h5>
+            <a href="{{ url_for('admin_lawyers') }}" class="btn btn-outline-accent btn-sm mt-2">View</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <i class="bi bi-person" style="font-size: 2rem; color: #ff6b35;"></i>
+            <h5 class="mt-2">Manage Clients</h5>
+            <a href="{{ url_for('admin_clients') }}" class="btn btn-outline-accent btn-sm mt-2">View</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <i class="bi bi-currency-rupee" style="font-size: 2rem; color: #ff6b35;"></i>
+            <h5 class="mt-2">Payment History</h5>
+            <a href="{{ url_for('admin_payments') }}" class="btn btn-outline-accent btn-sm mt-2">View</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <i class="bi bi-bell" style="font-size: 2rem; color: #ff6b35;"></i>
+            <h5 class="mt-2">Consult Requests</h5>
+            <a href="{{ url_for('admin_requests') }}" class="btn btn-outline-accent btn-sm mt-2">View</a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4 g-4">
     <div class="col-md-6">
         <div class="card p-4">
-            <h5><i class="bi bi-clock me-2 text-warning"></i>Pending Verification</h5>
+            <h5><i class="bi bi-clock-history me-2 text-accent"></i>Recent Lawyer Sign-ups</h5>
             <hr>
-            {% if pending %}
-                {% for lawyer in pending %}
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="background: #0a1628; border-radius: 8px;">
-                    <div>
-                        <strong>{{ lawyer.name }}</strong><br>
-                        <small>{{ lawyer.phone }} · {{ lawyer.bar_council_id }}</small>
-                    </div>
-                    <div>
-                        <a href="{{ url_for('admin_verify_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-success">Approve</a>
-                        <a href="{{ url_for('admin_reject_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-danger">Reject</a>
-                    </div>
-                </div>
+            {% if recent_lawyers %}
+                <ul class="list-group list-group-flush">
+                {% for lawyer in recent_lawyers %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ lawyer.name or 'New Lawyer' }} <small class="text-muted">({{ lawyer.phone }})</small></span>
+                        <span class="badge bg-warning">{{ lawyer.verification_status }}</span>
+                    </li>
                 {% endfor %}
+                </ul>
             {% else %}
-                <p class="text-muted">No pending lawyers.</p>
+                <p class="text-muted">No recent lawyers.</p>
             {% endif %}
         </div>
     </div>
     <div class="col-md-6">
         <div class="card p-4">
-            <h5><i class="bi bi-check-circle me-2 text-success"></i>Verified Lawyers</h5>
+            <h5><i class="bi bi-file-earmark-text me-2 text-accent"></i>Recent Cases</h5>
             <hr>
-            {% if verified %}
-                <ul class="list-group">
-                {% for lawyer in verified %}
-                    <li class="list-group-item">{{ lawyer.name }} ({{ lawyer.phone }})</li>
+            {% if recent_cases %}
+                <ul class="list-group list-group-flush">
+                {% for case in recent_cases %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ case.legal_area | title }} - {{ case.sub_type | replace('_',' ') | title }} <small class="text-muted">({{ case.client.phone }})</small></span>
+                        <span class="badge bg-success">{{ case.status }}</span>
+                    </li>
                 {% endfor %}
                 </ul>
             {% else %}
-                <p class="text-muted">No verified lawyers yet.</p>
+                <p class="text-muted">No recent cases.</p>
             {% endif %}
         </div>
     </div>
