@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Advocate Profile Setup{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h3><i class="bi bi-person-badge me-2 text-accent"></i>Complete Your Advocate Profile</h3>
+            <p class="text-muted">Set your fee, regions, languages, and practice areas.</p>
+            <hr>
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bar Council ID</label>
+                        <input type="text" class="form-control" name="bar_council_id">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Enrolment Year</label>
+                        <input type="number" class="form-control" name="enrolment_year" min="1950" max="2026">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Experience Level</label>
+                        <select class="form-select" name="experience_level">
+                            <option value="Junior">Junior (0-5 years)</option>
+                            <option value="Mid-Level">Mid-Level (5-15 years)</option>
+                            <option value="Senior">Senior (15+ years)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Consultation Fee (₹)</label>
+                        <input type="number" class="form-control" name="consultation_fee" value="1200" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Hearing Fee (₹)</label>
+                    <input type="number" class="form-control" name="hearing_fee" value="5000">
+                </div>
+
+                <!-- Languages -->
+                <div class="mb-3">
+                    <label class="form-label">Languages Spoken</label>
+                    <select class="form-select" name="languages" multiple size="5">
+                        <option value="hindi">Hindi</option>
+                        <option value="english">English</option>
+                        <option value="tamil">Tamil</option>
+                        <option value="telugu">Telugu</option>
+                        <option value="kannada">Kannada</option>
+                        <option value="malayalam">Malayalam</option>
+                        <option value="marathi">Marathi</option>
+                        <option value="bengali">Bengali</option>
+                        <option value="gujarati">Gujarati</option>
+                    </select>
+                    <small class="form-text">Hold Ctrl to select multiple languages.</small>
+                </div>
+
+                <!-- Practice Areas -->
+                <div class="mb-3">
+                    <label class="form-label">Practice Areas</label>
+                    <select class="form-select" name="areas" multiple size="6">
+                        <option value="property">Property</option>
+                        <option value="family">Family</option>
+                        <option value="criminal">Criminal</option>
+                        <option value="employment">Employment</option>
+                        <option value="startup">Startup</option>
+                        <option value="nri">NRI Matters</option>
+                        <option value="consumer">Consumer</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <small class="form-text">Hold Ctrl to select multiple areas.</small>
+                </div>
+
+                <!-- Regions -->
+                <div class="mb-3">
+                    <label class="form-label">Regions Served</label>
+                    <div id="regions-container">
+                        <div class="row mb-2">
+                            <div class="col">
+                                <select class="form-select region-state" onchange="updateDistricts(this)">
+                                    <option value="">Select State</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select class="form-select region-district">
+                                    <option value="">Select District</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-accent" onclick="addRegion()">
+                        <i class="bi bi-plus-circle me-1"></i> Add Another Region
+                    </button>
+                </div>
+
+                <button type="submit" class="btn btn-accent w-100 py-3">Save Profile</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let statesData = {};
+fetch('/static/states.json')
+    .then(res => res.json())
+    .then(data => {
+        statesData = data;
+        document.querySelectorAll('.region-state').forEach(sel => populateStates(sel));
+    });
+
+function populateStates(select) {
+    select.innerHTML = '<option value="">Select State</option>';
+    for (let state in statesData) {
+        let opt = document.createElement('option');
+        opt.value = state;
+        opt.textContent = state;
+        select.appendChild(opt);
+    }
+}
+
+function updateDistricts(stateSelect) {
+    let districtSelect = stateSelect.closest('.row').querySelector('.region-district');
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+    let state = stateSelect.value;
+    if (statesData[state]) {
+        statesData[state].forEach(district => {
+            let opt = document.createElement('option');
+            opt.value = district;
+            opt.textContent = district;
+            districtSelect.appendChild(opt);
+        });
+    }
+}
+
+function addRegion() {
+    const container = document.getElementById('regions-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'row mb-2';
+    newRow.innerHTML = `
+        <div class="col">
+            <select class="form-select region-state" onchange="updateDistricts(this)">
+                <option value="">Select State</option>
+            </select>
+        </div>
+        <div class="col">
+            <select class="form-select region-district">
+                <option value="">Select District</option>
+            </select>
+        </div>
+    `;
+    container.appendChild(newRow);
+    populateStates(newRow.querySelector('.region-state'));
+}
+</script>
+{% endblock %}
