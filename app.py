@@ -1,9 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
-from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry
+from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment
 from datetime import datetime
 import os
+import random
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -35,7 +36,6 @@ def login():
         
         login_user(user)
         
-        # Check if onboarding is complete
         if not user.onboarding_complete:
             return redirect(url_for('onboarding'))
         else:
@@ -127,72 +127,6 @@ def consult_payment():
                          platform_fee=platform_fee,
                          total=total)
 
-# --- Profile Routes ---
-
-@app.route('/profile')
-@login_required
-def profile():
-    payments = Payment.query.filter_by(user_id=current_user.id).order_by(Payment.created_at.desc()).all()
-    return render_template('profile.html', payments=payments)
-
-@app.route('/profile/edit', methods=['POST'])
-@login_required
-def edit_profile():
-    current_user.name = request.form.get('name', '').strip()
-    current_user.email = request.form.get('email', '').strip()
-    current_user.city = request.form.get('city', '').strip()
-    current_user.language = request.form.get('language', '').strip()
-    db.session.commit()
-    
-    # Create notification
-    notif = Notification(
-        user_id=current_user.id,
-        title='Profile Updated',
-        message='Your profile has been updated successfully.'
-    )
-    db.session.add(notif)
-    db.session.commit()
-    
-    flash('Profile updated successfully!', 'success')
-    return redirect(url_for('profile'))
-
-# --- Notifications Routes ---
-
-@app.route('/notifications')
-@login_required
-def notifications():
-    notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
-    return render_template('notifications.html', notifications=notifs)
-
-@app.route('/notifications/read/<int:notif_id>')
-@login_required
-def mark_notification_read(notif_id):
-    notif = Notification.query.filter_by(id=notif_id, user_id=current_user.id).first()
-    if notif:
-        notif.is_read = True
-        db.session.commit()
-    return redirect(url_for('notifications'))
-
-# --- Search Cases ---
-
-@app.route('/my-cases/search')
-@login_required
-def search_cases():
-    query = request.args.get('q', '').strip()
-    if query:
-        cases = Case.query.filter(
-            Case.user_id == current_user.id,
-            db.or_(
-                Case.legal_area.ilike(f'%{query}%'),
-                Case.sub_type.ilike(f'%{query}%'),
-                Case.advocate_name.ilike(f'%{query}%'),
-                Case.city.ilike(f'%{query}%')
-            )
-        ).order_by(Case.created_at.desc()).all()
-    else:
-        cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.created_at.desc()).all()
-    return render_template('my_cases.html', cases=cases, search_query=query)
-
 @app.route('/consult/confirmation', methods=['POST'])
 @login_required
 def consult_confirmation():
@@ -220,20 +154,24 @@ def consult_confirmation():
     db.session.add(event)
     
     # Add fee entries
-    fee1 = FeeEntry(
-        case_id=new_case.id,
-        description='Consultation Fee',
-        amount=session.get('advocate_fee', 1200),
-        status='Paid'
-    )
-    fee2 = FeeEntry(
-        case_id=new_case.id,
-        description='Platform Fee',
-        amount=session.get('platform_fee', 149),
-        status='Paid'
-    )
+    fee1 = FeeEntry(case_id=new_case.id, description='Consultation Fee', amount=session.get('advocate_fee', 1200), status='Paid')
+    fee2 = FeeEntry(case_id=new_case.id, description='Platform Fee', amount=session.get('platform_fee', 149), status='Paid')
     db.session.add(fee1)
     db.session.add(fee2)
+    
+    # Add payment records
+    payment1 = Payment(user_id=current_user.id, case_id=new_case.id, amount=session.get('advocate_fee', 1200), payment_type='Consultation Fee', status='Paid')
+    payment2 = Payment(user_id=current_user.id, case_id=new_case.id, amount=session.get('platform_fee', 149), payment_type='Platform Fee', status='Paid')
+    db.session.add(payment1)
+    db.session.add(payment2)
+    
+    # Add notification
+    notif = Notification(
+        user_id=current_user.id,
+        title='Case Created',
+        message=f'Your case for {session.get("legal_area", "")} has been created successfully.'
+    )
+    db.session.add(notif)
     db.session.commit()
     
     # Clear consultation session data
@@ -250,6 +188,24 @@ def my_cases():
     cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.created_at.desc()).all()
     return render_template('my_cases.html', cases=cases)
 
+@app.route('/my-cases/search')
+@login_required
+def search_cases():
+    query = request.args.get('q', '').strip()
+    if query:
+        cases = Case.query.filter(
+            Case.user_id == current_user.id,
+            db.or_(
+                Case.legal_area.ilike(f'%{query}%'),
+                Case.sub_type.ilike(f'%{query}%'),
+                Case.advocate_name.ilike(f'%{query}%'),
+                Case.city.ilike(f'%{query}%')
+            )
+        ).order_by(Case.created_at.desc()).all()
+    else:
+        cases = Case.query.filter_by(user_id=current_user.id).order_by(Case.created_at.desc()).all()
+    return render_template('my_cases.html', cases=cases, search_query=query)
+
 @app.route('/case/<int:case_id>')
 @login_required
 def case_detail(case_id):
@@ -261,15 +217,16 @@ def case_detail(case_id):
     fees = FeeEntry.query.filter_by(case_id=case.id).order_by(FeeEntry.created_at.desc()).all()
     documents = Document.query.filter_by(case_id=case.id).order_by(Document.uploaded_at.desc()).all()
     messages = Message.query.filter_by(case_id=case.id).order_by(Message.created_at.asc()).all()
+    updates = CaseUpdate.query.filter_by(case_id=case.id).order_by(CaseUpdate.created_at.desc()).all()
     
     return render_template('case_detail.html', 
                          case=case, 
                          timeline=timeline, 
                          fees=fees, 
                          documents=documents,
-                         messages=messages)
+                         messages=messages,
+                         updates=updates)
 
-# Document Upload
 @app.route('/case/<int:case_id>/upload', methods=['POST'])
 @login_required
 def upload_document(case_id):
@@ -280,18 +237,12 @@ def upload_document(case_id):
     if 'document' in request.files:
         file = request.files['document']
         if file.filename:
-            # Create upload folder if not exists
             upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(case_id))
             os.makedirs(upload_folder, exist_ok=True)
-            
             file_path = os.path.join(upload_folder, file.filename)
             file.save(file_path)
             
-            doc = Document(
-                case_id=case_id,
-                filename=file.filename,
-                file_path=file_path
-            )
+            doc = Document(case_id=case_id, filename=file.filename, file_path=file_path)
             db.session.add(doc)
             db.session.commit()
             
@@ -299,7 +250,6 @@ def upload_document(case_id):
     
     return redirect(url_for('case_detail', case_id=case_id))
 
-# Send Message
 @app.route('/case/<int:case_id>/message', methods=['POST'])
 @login_required
 def send_message(case_id):
@@ -309,47 +259,135 @@ def send_message(case_id):
     
     content = request.form.get('message', '').strip()
     if content:
-        msg = Message(
-            case_id=case_id,
-            sender='client',
-            content=content
-        )
+        msg = Message(case_id=case_id, sender='client', content=content)
         db.session.add(msg)
+        
+        notif = Notification(
+            user_id=current_user.id,
+            title='Message Sent',
+            message=f'Your message has been sent to {case.advocate_name}.'
+        )
+        db.session.add(notif)
         db.session.commit()
     
     return redirect(url_for('case_detail', case_id=case_id))
 
-# Lawyer: Log Hearing (simulated)
-@app.route('/case/<int:case_id>/log-hearing', methods=['POST'])
+@app.route('/case/<int:case_id>/update', methods=['POST'])
 @login_required
-def log_hearing(case_id):
-    # In real app, check if current_user.is_lawyer
-    case = Case.query.get(case_id)
+def add_case_update(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
     if not case:
         return redirect(url_for('my_cases'))
     
-    hearing_fee = 5000  # Default hearing fee
-    description = request.form.get('description', 'Hearing attended')
+    update_type = request.form.get('update_type', 'Note')
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
     
-    # Add timeline event
-    event = TimelineEvent(
-        case_id=case_id,
-        event_type='Hearing',
-        description=description
-    )
-    db.session.add(event)
-    
-    # Add fee entry
-    fee = FeeEntry(
-        case_id=case_id,
-        description=description,
-        amount=hearing_fee,
-        status='Pending'
-    )
-    db.session.add(fee)
-    db.session.commit()
+    if title or description:
+        update = CaseUpdate(case_id=case_id, update_type=update_type, title=title, description=description)
+        db.session.add(update)
+        
+        event = TimelineEvent(case_id=case_id, event_type=update_type, description=title or description)
+        db.session.add(event)
+        
+        notif = Notification(
+            user_id=current_user.id,
+            title=f'Case Update: {update_type}',
+            message=title or description
+        )
+        db.session.add(notif)
+        
+        if update_type == 'Hearing':
+            case.status = 'Hearing Scheduled'
+        elif update_type == 'Order':
+            case.status = 'Order Received'
+        elif update_type == 'Resolved':
+            case.status = 'Resolved'
+        
+        db.session.commit()
+        flash('Case updated successfully!', 'success')
     
     return redirect(url_for('case_detail', case_id=case_id))
+
+@app.route('/case/<int:case_id>/simulate-lawyer-update')
+@login_required
+def simulate_lawyer_update(case_id):
+    case = Case.query.filter_by(id=case_id, user_id=current_user.id).first()
+    if not case:
+        return redirect(url_for('my_cases'))
+    
+    updates = [
+        {'type': 'Hearing', 'title': 'Hearing Scheduled', 'description': 'Next hearing scheduled for 25 Aug 2026 at City Civil Court.'},
+        {'type': 'Filing', 'title': 'Additional Documents Filed', 'description': 'Affidavit and supporting documents filed with the court.'},
+        {'type': 'Order', 'title': 'Court Order Received', 'description': 'The court has directed the respondent to file a reply within 2 weeks.'},
+        {'type': 'Note', 'title': 'Case Review', 'description': 'Advocate reviewed the case and prepared next steps.'}
+    ]
+    
+    update = random.choice(updates)
+    
+    case_update = CaseUpdate(case_id=case_id, update_type=update['type'], title=update['title'], description=update['description'])
+    db.session.add(case_update)
+    
+    event = TimelineEvent(case_id=case_id, event_type=update['type'], description=update['title'])
+    db.session.add(event)
+    
+    notif = Notification(
+        user_id=current_user.id,
+        title=f'Case Update: {update["type"]}',
+        message=update['description']
+    )
+    db.session.add(notif)
+    
+    case.status = update['type']
+    db.session.commit()
+    
+    flash(f'New case update: {update["title"]}', 'info')
+    return redirect(url_for('case_detail', case_id=case_id))
+
+# --- Profile Routes ---
+
+@app.route('/profile')
+@login_required
+def profile():
+    payments = Payment.query.filter_by(user_id=current_user.id).order_by(Payment.created_at.desc()).all()
+    return render_template('profile.html', payments=payments)
+
+@app.route('/profile/edit', methods=['POST'])
+@login_required
+def edit_profile():
+    current_user.name = request.form.get('name', '').strip()
+    current_user.email = request.form.get('email', '').strip()
+    current_user.city = request.form.get('city', '').strip()
+    current_user.language = request.form.get('language', '').strip()
+    db.session.commit()
+    
+    notif = Notification(
+        user_id=current_user.id,
+        title='Profile Updated',
+        message='Your profile has been updated successfully.'
+    )
+    db.session.add(notif)
+    db.session.commit()
+    
+    flash('Profile updated successfully!', 'success')
+    return redirect(url_for('profile'))
+
+# --- Notifications Routes ---
+
+@app.route('/notifications')
+@login_required
+def notifications():
+    notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return render_template('notifications.html', notifications=notifs)
+
+@app.route('/notifications/read/<int:notif_id>')
+@login_required
+def mark_notification_read(notif_id):
+    notif = Notification.query.filter_by(id=notif_id, user_id=current_user.id).first()
+    if notif:
+        notif.is_read = True
+        db.session.commit()
+    return redirect(url_for('notifications'))
 
 @app.route('/logout')
 def logout():
