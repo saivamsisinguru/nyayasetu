@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Consultation Requests{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-bell me-2 text-accent"></i>Consultation Requests</h2>
+        <p class="text-muted">All client requests across the platform</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mt-4 p-3">
+    <form method="GET" action="{{ url_for('admin_requests') }}" class="row g-2">
+        <div class="col-md-3">
+            <select class="form-select" name="status">
+                <option value="">All Statuses</option>
+                <option value="Pending" {% if request.args.get('status') == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Accepted" {% if request.args.get('status') == 'Accepted' %}selected{% endif %}>Accepted</option>
+                <option value="Declined" {% if request.args.get('status') == 'Declined' %}selected{% endif %}>Declined</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" name="legal_area">
+                <option value="">All Areas</option>
+                <option value="property" {% if request.args.get('legal_area') == 'property' %}selected{% endif %}>Property</option>
+                <option value="family" {% if request.args.get('legal_area') == 'family' %}selected{% endif %}>Family</option>
+                <option value="criminal" {% if request.args.get('legal_area') == 'criminal' %}selected{% endif %}>Criminal</option>
+                <option value="employment" {% if request.args.get('legal_area') == 'employment' %}selected{% endif %}>Employment</option>
+                <option value="startup" {% if request.args.get('legal_area') == 'startup' %}selected{% endif %}>Startup</option>
+                <option value="nri" {% if request.args.get('legal_area') == 'nri' %}selected{% endif %}>NRI</option>
+                <option value="consumer" {% if request.args.get('legal_area') == 'consumer' %}selected{% endif %}>Consumer</option>
+                <option value="other" {% if request.args.get('legal_area') == 'other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-accent w-100">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Requests Table -->
+<div class="card mt-4 p-4">
+    {% if requests %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Client</th>
+                    <th>Lawyer</th>
+                    <th>Area</th>
+                    <th>State / District</th>
+                    <th>Fee Range</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>{{ req.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+                    <td>{{ req.client.phone }}</td>
+                    <td>{{ req.lawyer.name or req.lawyer.phone }}</td>
+                    <td>{{ req.legal_area | title }} - {{ req.sub_type | replace('_',' ') | title }}</td>
+                    <td>{{ req.state }} / {{ req.district }}</td>
+                    <td>₹{{ req.fee_range_min }} - ₹{{ req.fee_range_max }}</td>
+                    <td>
+                        {% if req.status == 'Pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif req.status == 'Accepted' %}
+                        <span class="badge bg-success">Accepted</span>
+                        {% else %}
+                        <span class="badge bg-danger">Declined</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-4">No requests found.</p>
+    {% endif %}
+</div>
+{% endblock %}
