@@ -1,11 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
-from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment
+from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment, Lawyer, ConsultationRequest
 from datetime import datetime
 import os
 import random
-from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment, Lawyer, ConsultationRequest
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -14,10 +13,21 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    # First try to find a User
+    user = db.session.get(User, int(user_id))
+    if user:
+        return user
+    
+    # Then try to find a Lawyer
+    lawyer = db.session.get(Lawyer, int(user_id))
+    if lawyer:
+        return lawyer
+    
+    return None
 
 # --- Routes ---
 
@@ -149,6 +159,7 @@ def consult_payment():
 def consult_confirmation():
     new_case = Case(
         user_id=current_user.id,
+        lawyer_id=Lawyer.query.first().id if Lawyer.query.first() else None,
         advocate_name=session.get('advocate_name', 'Adv. Priya Menon'),
         legal_area=session.get('legal_area', ''),
         sub_type=session.get('sub_type', ''),
@@ -162,7 +173,6 @@ def consult_confirmation():
     db.session.add(new_case)
     db.session.commit()
     
-    # Add initial timeline event
     event = TimelineEvent(
         case_id=new_case.id,
         event_type='Consultation',
@@ -170,19 +180,16 @@ def consult_confirmation():
     )
     db.session.add(event)
     
-    # Add fee entries
     fee1 = FeeEntry(case_id=new_case.id, description='Consultation Fee', amount=session.get('advocate_fee', 1200), status='Paid')
     fee2 = FeeEntry(case_id=new_case.id, description='Platform Fee', amount=session.get('platform_fee', 149), status='Paid')
     db.session.add(fee1)
     db.session.add(fee2)
     
-    # Add payment records
     payment1 = Payment(user_id=current_user.id, case_id=new_case.id, amount=session.get('advocate_fee', 1200), payment_type='Consultation Fee', status='Paid')
     payment2 = Payment(user_id=current_user.id, case_id=new_case.id, amount=session.get('platform_fee', 149), payment_type='Platform Fee', status='Paid')
     db.session.add(payment1)
     db.session.add(payment2)
     
-    # Add notification
     notif = Notification(
         user_id=current_user.id,
         title='Case Created',
@@ -191,7 +198,6 @@ def consult_confirmation():
     db.session.add(notif)
     db.session.commit()
     
-    # Clear consultation session data
     for key in ['advocate_name', 'advocate_fee', 'platform_fee', 'legal_area', 'sub_type', 'city', 'description']:
         session.pop(key, None)
     
@@ -262,7 +268,6 @@ def upload_document(case_id):
             doc = Document(case_id=case_id, filename=file.filename, file_path=file_path)
             db.session.add(doc)
             db.session.commit()
-            
             flash('Document uploaded successfully!', 'success')
     
     return redirect(url_for('case_detail', case_id=case_id))
@@ -406,12 +411,6 @@ def mark_notification_read(notif_id):
         db.session.commit()
     return redirect(url_for('notifications'))
 
-@app.route('/logout')
-def logout():
-    logout_user()
-    session.clear()
-    return redirect(url_for('index'))
-
 # --- Lawyer Routes ---
 
 @app.route('/lawyer/login', methods=['GET', 'POST'])
@@ -506,15 +505,12 @@ def lawyer_log_hearing(case_id):
     description = request.form.get('description', 'Hearing attended')
     hearing_fee = current_user.hearing_fee if hasattr(current_user, 'hearing_fee') else 5000
     
-    # Add timeline event
     event = TimelineEvent(case_id=case_id, event_type='Hearing', description=description)
     db.session.add(event)
     
-    # Add fee entry
     fee = FeeEntry(case_id=case_id, description=description, amount=hearing_fee, status='Pending')
     db.session.add(fee)
     
-    # Update case status
     case.status = 'Hearing Completed'
     db.session.commit()
     
@@ -561,6 +557,12 @@ def lawyer_upload_document(case_id):
 @app.route('/lawyer/logout')
 def lawyer_logout():
     logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    session.clear()
     return redirect(url_for('index'))
 
 # --- Run ---
