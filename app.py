@@ -3,6 +3,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from config import Config
 from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment, Lawyer, ConsultationRequest, LawyerRegion, LawyerLanguage, LawyerPracticeArea
 from datetime import datetime
+from models import db, User, Case, Document, Message, TimelineEvent, FeeEntry, CaseUpdate, Notification, Payment, Lawyer, ConsultationRequest, LawyerRegion, LawyerLanguage, LawyerPracticeArea, Admin
 import os
 import random
 
