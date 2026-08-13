@@ -81,18 +81,18 @@
                     </div>
                 </div>
 
-                <!-- Regions (Dynamic rows with proper names) -->
+                <!-- Regions (Dynamic rows with proper names and required first row) -->
                 <div class="mb-3">
-                    <label class="form-label">Regions Served</label>
+                    <label class="form-label">Regions Served <span class="text-danger">*</span></label>
                     <div id="regions-container">
                         <div class="row mb-2">
                             <div class="col">
-                                <select class="form-select region-state" name="region_state" onchange="updateDistricts(this)">
+                                <select class="form-select region-state" name="region_state" onchange="updateDistricts(this)" required>
                                     <option value="">Select State</option>
                                 </select>
                             </div>
                             <div class="col">
-                                <select class="form-select region-district" name="region_district">
+                                <select class="form-select region-district" name="region_district" required>
                                     <option value="">Select District</option>
                                 </select>
                             </div>
@@ -101,6 +101,7 @@
                     <button type="button" class="btn btn-sm btn-outline-accent" onclick="addRegion()">
                         <i class="bi bi-plus-circle me-1"></i> Add Another Region
                     </button>
+                    <small class="form-text">You must add at least one region.</small>
                 </div>
 
                 <button type="submit" class="btn btn-accent w-100 py-3">Save Profile</button>
