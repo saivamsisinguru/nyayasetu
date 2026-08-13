@@ -704,9 +704,21 @@ def admin_login():
 def admin_dashboard():
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    pending_lawyers = Lawyer.query.filter_by(verification_status='pending').all()
-    verified_lawyers = Lawyer.query.filter_by(verification_status='verified').all()
-    return render_template('admin_dashboard.html', pending=pending_lawyers, verified=verified_lawyers)
+    total_clients = User.query.count()
+    total_lawyers = Lawyer.query.count()
+    total_cases = Case.query.count()
+    total_payments = db.session.query(db.func.coalesce(db.func.sum(Payment.amount), 0)).scalar()
+    pending_lawyers_count = Lawyer.query.filter_by(verification_status='pending').count()
+    recent_lawyers = Lawyer.query.order_by(Lawyer.created_at.desc()).limit(5).all()
+    recent_cases = Case.query.order_by(Case.created_at.desc()).limit(5).all()
+    return render_template('admin_dashboard.html',
+                         total_clients=total_clients,
+                         total_lawyers=total_lawyers,
+                         total_cases=total_cases,
+                         total_payments=total_payments,
+                         pending_lawyers_count=pending_lawyers_count,
+                         recent_lawyers=recent_lawyers,
+                         recent_cases=recent_cases)
 
 @app.route('/admin/verify/<int:lawyer_id>')
 @login_required
