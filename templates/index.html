@@ -12,9 +12,15 @@
         Connect with India's top advocates.<br>
         Transparent fees. Real-time updates. Zero confusion.
     </p>
-    <a href="{{ url_for('login') }}" class="btn btn-accent btn-lg px-5 py-3">
-        <i class="bi bi-arrow-right-circle me-2"></i> Get Started
-    </a>
+    
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{{ url_for('login') }}" class="btn btn-accent btn-lg px-5 py-3">
+            <i class="bi bi-arrow-right-circle me-2"></i> Get Started
+        </a>
+        <a href="{{ url_for('lawyer_login') }}" class="btn btn-outline-accent btn-lg px-5 py-3">
+            <i class="bi bi-person-badge me-2"></i> I'm an Advocate
+        </a>
+    </div>
     
     <div class="row mt-5 pt-5 g-4">
         <div class="col-md-4">
@@ -42,6 +48,28 @@
                 </div>
                 <h5>Secure Communication</h5>
                 <p class="text-muted small mb-0">Direct messaging with your advocate, all encrypted.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Bar -->
+    <div class="row mt-5 pt-3">
+        <div class="col-12">
+            <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h3 style="color: #ff6b35; font-weight: 900;">2,500+</h3>
+                        <p class="text-muted mb-0">Verified Advocates</p>
+                    </div>
+                    <div class="col-4">
+                        <h3 style="color: #ff6b35; font-weight: 900;">15,000+</h3>
+                        <p class="text-muted mb-0">Cases Resolved</p>
+                    </div>
+                    <div class="col-4">
+                        <h3 style="color: #ff6b35; font-weight: 900;">4.8★</h3>
+                        <p class="text-muted mb-0">Client Rating</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
