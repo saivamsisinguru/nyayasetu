@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Edit Advocate Profile{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h3><i class="bi bi-pencil-square me-2 text-accent"></i>Edit Advocate Profile</h3>
+            <p class="text-muted">Update your details. Bar Council ID cannot be changed.</p>
+            <hr>
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="name" value="{{ current_user.name or '' }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="{{ current_user.email or '' }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Bar Council ID (Locked)</label>
+                        <input type="text" class="form-control" value="{{ current_user.bar_council_id or '' }}" disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Enrolment Year</label>
+                        <input type="number" class="form-control" name="enrolment_year" value="{{ current_user.enrolment_year or '' }}" min="1950" max="2026">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Experience Level</label>
+                        <select class="form-select" name="experience_level">
+                            <option value="Junior" {% if current_user.experience_level == 'Junior' %}selected{% endif %}>Junior (0-5 years)</option>
+                            <option value="Mid-Level" {% if current_user.experience_level == 'Mid-Level' %}selected{% endif %}>Mid-Level (5-15 years)</option>
+                            <option value="Senior" {% if current_user.experience_level == 'Senior' %}selected{% endif %}>Senior (15+ years)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Consultation Fee (₹)</label>
+                        <input type="number" class="form-control" name="consultation_fee" value="{{ current_user.consultation_fee }}" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Hearing Fee (₹)</label>
+                    <input type="number" class="form-control" name="hearing_fee" value="{{ current_user.hearing_fee }}">
+                </div>
+
+                <!-- Languages (pre-checked) -->
+                <div class="mb-3">
+                    <label class="form-label">Languages Spoken</label>
+                    <div class="row">
+                        {% set selected_langs = current_user.languages|map(attribute='language')|list %}
+                        {% for lang in ['hindi','english','tamil','telugu','kannada','malayalam','marathi','bengali','gujarati'] %}
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="languages" value="{{ lang }}" id="lang_{{ lang }}" {% if lang in selected_langs %}checked{% endif %}>
+                                <label class="form-check-label" for="lang_{{ lang }}">{{ lang | title }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Practice Areas (pre-checked) -->
+                <div class="mb-3">
+                    <label class="form-label">Practice Areas</label>
+                    <div class="row">
+                        {% set selected_areas = current_user.practice_areas|map(attribute='area')|list %}
+                        {% for area in ['property','family','criminal','employment','startup','nri','consumer','other'] %}
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="areas" value="{{ area }}" id="area_{{ area }}" {% if area in selected_areas %}checked{% endif %}>
+                                <label class="form-check-label" for="area_{{ area }}">{{ area | replace('_',' ') | title }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Regions (pre-filled) -->
+                <div class="mb-3">
+                    <label class="form-label">Regions Served <span class="text-danger">*</span></label>
+                    <div id="regions-container">
+                        {% for region in current_user.regions %}
+                        <div class="row mb-2">
+                            <div class="col">
+                                <select class="form-select region-state" name="region_state" onchange="updateDistricts(this)" required>
+                                    <option value="{{ region.state }}" selected>{{ region.state }}</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select class="form-select region-district" name="region_district" required>
+                                    <option value="{{ region.district }}" selected>{{ region.district }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not current_user.regions %}
+                        <div class="row mb-2">
+                            <div class="col">
+                                <select class="form-select region-state" name="region_state" onchange="updateDistricts(this)" required>
+                                    <option value="">Select State</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select class="form-select region-district" name="region_district" required>
+                                    <option value="">Select District</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-accent" onclick="addRegion()">
+                        <i class="bi bi-plus-circle me-1"></i> Add Another Region
+                    </button>
+                    <small class="form-text">You must have at least one region.</small>
+                </div>
+
+                <button type="submit" class="btn btn-accent w-100 py-3">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let statesData = {};
+fetch('/static/states.json')
+    .then(res => res.json())
+    .then(data => {
+        statesData = data;
+        document.querySelectorAll('.region-state').forEach(sel => populateStates(sel));
+    });
+
+function populateStates(select) {
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">Select State</option>';
+    for (let state in statesData) {
+        let opt = document.createElement('option');
+        opt.value = state;
+        opt.textContent = state;
+        if (state === currentValue) opt.selected = true;
+        select.appendChild(opt);
+    }
+    // After populating, update its district if state already selected
+    if (currentValue) {
+        updateDistricts(select);
+        let districtSelect = select.closest('.row').querySelector('.region-district');
+        // Preserve district value from before
+        districtSelect.value = select.closest('.row').querySelector('.region-district').dataset.oldValue || '';
+    }
+}
+
+function updateDistricts(stateSelect) {
+    let districtSelect = stateSelect.closest('.row').querySelector('.region-district');
+    let state = stateSelect.value;
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+    if (statesData[state]) {
+        statesData[state].forEach(district => {
+            let opt = document.createElement('option');
+            opt.value = district;
+            opt.textContent = district;
+            districtSelect.appendChild(opt);
+        });
+    }
+}
+
+function addRegion() {
+    const container = document.getElementById('regions-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'row mb-2';
+    newRow.innerHTML = `
+        <div class="col">
+            <select class="form-select region-state" name="region_state" onchange="updateDistricts(this)">
+                <option value="">Select State</option>
+            </select>
+        </div>
+        <div class="col">
+            <select class="form-select region-district" name="region_district">
+                <option value="">Select District</option>
+            </select>
+        </div>
+    `;
+    container.appendChild(newRow);
+    populateStates(newRow.querySelector('.region-state'));
+}
+</script>
+{% endblock %}
