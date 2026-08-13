@@ -47,40 +47,41 @@
                     <input type="number" class="form-control" name="hearing_fee" value="5000">
                 </div>
 
-                <!-- Languages -->
+                <!-- Languages (Checkboxes) -->
                 <div class="mb-3">
                     <label class="form-label">Languages Spoken</label>
-                    <select class="form-select" name="languages" multiple size="5">
-                        <option value="hindi">Hindi</option>
-                        <option value="english">English</option>
-                        <option value="tamil">Tamil</option>
-                        <option value="telugu">Telugu</option>
-                        <option value="kannada">Kannada</option>
-                        <option value="malayalam">Malayalam</option>
-                        <option value="marathi">Marathi</option>
-                        <option value="bengali">Bengali</option>
-                        <option value="gujarati">Gujarati</option>
-                    </select>
-                    <small class="form-text">Hold Ctrl to select multiple languages.</small>
+                    <div class="row">
+                        {% for lang in ['hindi','english','tamil','telugu','kannada','malayalam','marathi','bengali','gujarati'] %}
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="languages" value="{{ lang }}" id="lang_{{ lang }}">
+                                <label class="form-check-label" for="lang_{{ lang }}">
+                                    {{ lang | title }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
 
-                <!-- Practice Areas -->
+                <!-- Practice Areas (Checkboxes) -->
                 <div class="mb-3">
                     <label class="form-label">Practice Areas</label>
-                    <select class="form-select" name="areas" multiple size="6">
-                        <option value="property">Property</option>
-                        <option value="family">Family</option>
-                        <option value="criminal">Criminal</option>
-                        <option value="employment">Employment</option>
-                        <option value="startup">Startup</option>
-                        <option value="nri">NRI Matters</option>
-                        <option value="consumer">Consumer</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <small class="form-text">Hold Ctrl to select multiple areas.</small>
+                    <div class="row">
+                        {% for area in ['property','family','criminal','employment','startup','nri','consumer','other'] %}
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="areas" value="{{ area }}" id="area_{{ area }}">
+                                <label class="form-check-label" for="area_{{ area }}">
+                                    {{ area | replace('_',' ') | title }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
 
-                <!-- Regions -->
+                <!-- Regions (Dynamic rows) -->
                 <div class="mb-3">
                     <label class="form-label">Regions Served</label>
                     <div id="regions-container">
