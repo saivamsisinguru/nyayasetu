@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Lawyer Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-person-badge me-2 text-accent"></i>Advocate Dashboard</h2>
+        <p class="text-muted">Welcome, {{ current_user.name or current_user.phone }}</p>
+    </div>
+    <a href="{{ url_for('lawyer_logout') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-box-arrow-right me-1"></i> Logout
+    </a>
+</div>
+
+<div class="row mt-4 g-4">
+    <div class="col-md-3">
+        <div class="card p-4 text-center">
+            <h3 class="text-accent">{{ pending_requests|length }}</h3>
+            <p class="text-muted mb-0">Pending Requests</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center">
+            <h3 class="text-accent">{{ active_cases|length }}</h3>
+            <p class="text-muted mb-0">Active Cases</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center">
+            <h3 class="text-success">₹{{ total_earnings }}</h3>
+            <p class="text-muted mb-0">Total Earned</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center">
+            <h3 class="text-warning">{{ unread_messages }}</h3>
+            <p class="text-muted mb-0">Client Messages</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 g-4">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5><i class="bi bi-bell me-2 text-accent"></i>Pending Consultation Requests</h5>
+            <hr>
+            {% if pending_requests %}
+                {% for req in pending_requests[:5] %}
+                <div class="d-flex justify-content-between align-items-center p-3 mb-2" style="background: #0a1628; border-radius: 8px;">
+                    <div>
+                        <strong>{{ req.legal_area | title }} - {{ req.sub_type | replace('_', ' ') | title }}</strong>
+                        <br><small class="text-muted">{{ req.client.phone }} · {{ req.city }}</small>
+                    </div>
+                    <a href="{{ url_for('lawyer_requests') }}" class="btn btn-sm btn-outline-accent">View</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No pending requests.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5><i class="bi bi-folder2-open me-2 text-accent"></i>Quick Links</h5>
+            <hr>
+            <a href="{{ url_for('lawyer_requests') }}" class="btn btn-outline-accent w-100 mb-2">
+                <i class="bi bi-bell me-1"></i> View All Requests
+            </a>
+            <a href="{{ url_for('lawyer_cases') }}" class="btn btn-outline-accent w-100">
+                <i class="bi bi-folder me-1"></i> Manage Cases
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
