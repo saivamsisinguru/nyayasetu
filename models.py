@@ -15,11 +15,12 @@ class User(UserMixin, db.Model):
     district = db.Column(db.String(100))
     is_lawyer = db.Column(db.Boolean, default=False)
     onboarding_complete = db.Column(db.Boolean, default=False)
-    is_active = db.Column(db.Boolean, default=True)   # <-- added
+    is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     cases = db.relationship('Case', backref='client', lazy=True)
     notifications = db.relationship('Notification', backref='user', lazy=True)
+    payments = db.relationship('Payment', backref='user', lazy=True)
 
 class Lawyer(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,9 +34,9 @@ class Lawyer(UserMixin, db.Model):
     hearing_fee = db.Column(db.Integer, default=5000)
     is_verified = db.Column(db.Boolean, default=False)
     is_available = db.Column(db.Boolean, default=True)
-    verification_status = db.Column(db.String(20), default='pending')   # pending, verified, rejected, suspended
+    verification_status = db.Column(db.String(20), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     consultation_requests = db.relationship('ConsultationRequest', backref='lawyer', lazy=True)
     assigned_cases = db.relationship('Case', backref='assigned_lawyer', lazy=True, foreign_keys='Case.lawyer_id')
     regions = db.relationship('LawyerRegion', backref='lawyer', lazy=True, cascade='all, delete-orphan')
@@ -71,9 +72,9 @@ class ConsultationRequest(db.Model):
     fee_range_min = db.Column(db.Integer)
     fee_range_max = db.Column(db.Integer)
     language = db.Column(db.String(50))
-    status = db.Column(db.String(20), default='Pending')  # Pending, Accepted, Declined
+    status = db.Column(db.String(20), default='Pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     client = db.relationship('User', backref='consultation_requests')
 
 class Case(db.Model):
@@ -89,12 +90,12 @@ class Case(db.Model):
     description = db.Column(db.Text)
     status = db.Column(db.String(50), default='Active')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     advocate_fee = db.Column(db.Integer, default=0)
     platform_fee = db.Column(db.Integer, default=0)
     total_paid = db.Column(db.Integer, default=0)
     retainer_balance = db.Column(db.Integer, default=0)
-    
+
     documents = db.relationship('Document', backref='case', lazy=True)
     messages = db.relationship('Message', backref='case', lazy=True)
     timeline_events = db.relationship('TimelineEvent', backref='case', lazy=True)
@@ -155,8 +156,28 @@ class Payment(db.Model):
     status = db.Column(db.String(20), default='Paid')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    user = db.relationship('User', backref='payment_records')
+
 class Admin(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     name = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ContactDetails(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+    address = db.Column(db.String(300))
+    working_hours = db.Column(db.String(200))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class ContactMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(120))
+    phone = db.Column(db.String(20))
+    subject = db.Column(db.String(200))
+    message = db.Column(db.Text)
+    is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
