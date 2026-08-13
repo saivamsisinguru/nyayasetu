@@ -1,49 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Your Matched Advocate{% endblock %}
+{% block title %}Advocate Details{% endblock %}
 {% block content %}
 <div class="row justify-content-center mt-4">
     <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h4 class="card-title">{{ advocate.name }}</h4>
-                <hr>
-                
-                <div class="mb-2">
-                    <strong>Bar Council:</strong> {{ advocate.bar_council }}
-                </div>
-                <div class="mb-2">
-                    <strong>Enrolment Year:</strong> {{ advocate.enrolment_year }}
-                </div>
-                <div class="mb-2">
-                    <strong>Courts of Practice:</strong> {{ advocate.courts }}
-                </div>
-                <div class="mb-2">
-                    <strong>Languages:</strong> {{ advocate.languages }}
-                </div>
-                
-                <hr>
-                
-                <div class="mb-3">
-                    <strong>First Available Slot:</strong> 
-                    <span class="text-success">{{ advocate.first_slot }}</span>
-                </div>
-                
-                <div class="mb-3">
-                    <strong>Consultation Fee:</strong> 
-                    <span class="text-primary">₹{{ advocate.fee }}</span> (30 min)
-                </div>
-                
-                <hr>
-                
-                <form method="POST" action="{{ url_for('consult_request') }}">
-    <button type="submit" class="btn btn-primary btn-lg w-100">Request Consultation</button>
-</form>
-                
-                <p class="text-muted small mt-2 text-center">
-                    Your request will be sent to this advocate. If accepted, you will pay the advocate's fee 
-                    and a platform convenience fee.
-                </p>
-            </div>
+        <div class="card p-4">
+            <h3 class="text-accent">{{ lawyer.name or 'Advocate' }}</h3>
+            <hr>
+            <p><strong>Bar Council ID:</strong> {{ lawyer.bar_council_id or 'Not provided' }}</p>
+            <p><strong>Experience Level:</strong> {{ lawyer.experience_level }}</p>
+            <p><strong>Consultation Fee:</strong> ₹{{ lawyer.consultation_fee }} (30 min)</p>
+            <p><strong>Languages:</strong> {{ lawyer.languages|map(attribute='language')|join(', ') }}</p>
+            <p><strong>Regions:</strong> {{ lawyer.regions|map(attribute='district')|join(', ') }}</p>
+            <hr>
+            <form method="POST" action="{{ url_for('consult_request') }}">
+                <button type="submit" class="btn btn-accent w-100 py-3">Request Consultation</button>
+            </form>
+            <p class="text-muted small mt-2 text-center">Your request will be sent to this advocate.</p>
         </div>
     </div>
 </div>
