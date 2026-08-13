@@ -33,6 +33,7 @@ class Lawyer(UserMixin, db.Model):
     is_verified = db.Column(db.Boolean, default=False)
     is_available = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    verification_status = db.Column(db.String(20), default='pending')
     
     consultation_requests = db.relationship('ConsultationRequest', backref='lawyer', lazy=True)
     assigned_cases = db.relationship('Case', backref='assigned_lawyer', lazy=True, foreign_keys='Case.lawyer_id')
@@ -151,4 +152,11 @@ class Payment(db.Model):
     amount = db.Column(db.Integer)
     payment_type = db.Column(db.String(50))
     status = db.Column(db.String(20), default='Paid')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Add new Admin model at the end
+class Admin(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(15), unique=True, nullable=False)
+    name = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
