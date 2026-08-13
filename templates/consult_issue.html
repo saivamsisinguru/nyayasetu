@@ -1,40 +1,96 @@
 {% extends "base.html" %}
-{% block title %}What's your legal issue?{% endblock %}
+{% block title %}Find Your Advocate{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <h2>What legal help do you need?</h2>
-        <form method="POST">
-            <div class="mb-3">
-                <label for="legal_area" class="form-label">Legal Area</label>
-                <select class="form-select" id="legal_area" name="legal_area" required onchange="updateSubTypes()">
-                    <option value="">-- Select --</option>
-                    <option value="property">Property</option>
-                    <option value="family">Family</option>
-                    <option value="criminal">Criminal</option>
-                    <option value="employment">Employment</option>
-                    <option value="startup">Startup</option>
-                    <option value="nri">NRI Matters</option>
-                    <option value="consumer">Consumer</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="sub_type" class="form-label">Sub-type</label>
-                <select class="form-select" id="sub_type" name="sub_type" required disabled>
-                    <option value="">-- First choose an area --</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="city" class="form-label">City / Court Location</label>
-                <input type="text" class="form-control" id="city" name="city" placeholder="e.g. Mumbai" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Continue</button>
-        </form>
+<div class="row justify-content-center mt-4">
+    <div class="col-md-7">
+        <div class="card p-4">
+            <h3 class="mb-3"><i class="bi bi-search me-2 text-accent"></i>Find Your Advocate</h3>
+            <p class="text-muted">Tell us about your issue and preferences.</p>
+            <hr>
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">State</label>
+                        <select class="form-select" id="state" name="state" required onchange="updateDistricts()">
+                            <option value="">-- Select State --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">District</label>
+                        <select class="form-select" id="district" name="district" required disabled>
+                            <option value="">-- First select state --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Legal Area</label>
+                        <select class="form-select" id="legal_area" name="legal_area" required onchange="updateSubTypes()">
+                            <option value="">-- Select --</option>
+                            <option value="property">Property</option>
+                            <option value="family">Family</option>
+                            <option value="criminal">Criminal</option>
+                            <option value="employment">Employment</option>
+                            <option value="startup">Startup</option>
+                            <option value="nri">NRI Matters</option>
+                            <option value="consumer">Consumer</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Sub-type</label>
+                        <select class="form-select" id="sub_type" name="sub_type" required disabled>
+                            <option value="">-- First choose area --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fee Range</label>
+                        <select class="form-select" name="fee_range" required>
+                            <option value="">-- Select Budget --</option>
+                            <option value="500-1000">₹500 - ₹1,000</option>
+                            <option value="1000-2000">₹1,000 - ₹2,000</option>
+                            <option value="2000-5000">₹2,000 - ₹5,000</option>
+                            <option value="5000-10000">₹5,000 - ₹10,000</option>
+                            <option value="10000+">₹10,000+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Preferred Language</label>
+                        <select class="form-select" name="language" required>
+                            <option value="">-- Select --</option>
+                            <option value="hindi">Hindi</option>
+                            <option value="english">English</option>
+                            <option value="tamil">Tamil</option>
+                            <option value="telugu">Telugu</option>
+                            <option value="kannada">Kannada</option>
+                            <option value="malayalam">Malayalam</option>
+                            <option value="marathi">Marathi</option>
+                            <option value="bengali">Bengali</option>
+                            <option value="gujarati">Gujarati</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Experience Level (Optional)</label>
+                    <select class="form-select" name="experience">
+                        <option value="">Any Experience</option>
+                        <option value="Junior">Junior (0-5 years)</option>
+                        <option value="Mid-Level">Mid-Level (5-15 years)</option>
+                        <option value="Senior">Senior (15+ years)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-accent w-100 py-3">
+                    <i class="bi bi-search me-1"></i> Find Advocates
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
+// Sub-type mapping
 const subTypes = {
     property: ["Title Dispute", "Tenant Eviction", "Registration Delay", "Inheritance", "Other"],
     family: ["Divorce", "Custody", "Maintenance", "Domestic Violence", "Other"],
@@ -53,7 +109,7 @@ function updateSubTypes() {
     if (area && subTypes[area]) {
         subTypes[area].forEach(sub => {
             const opt = document.createElement('option');
-            opt.value = sub.toLowerCase().replace(' ', '_');
+            opt.value = sub.toLowerCase().replace(/ /g, '_');
             opt.textContent = sub;
             subSelect.appendChild(opt);
         });
@@ -61,6 +117,51 @@ function updateSubTypes() {
     } else {
         subSelect.disabled = true;
     }
+}
+
+// Load states and districts from JSON
+let allStates = {};
+
+fetch('/static/states.json')
+    .then(response => response.json())
+    .then(data => {
+        allStates = data;
+        const stateSelect = document.getElementById('state');
+        for (let state in allStates) {
+            const opt = document.createElement('option');
+            opt.value = state;
+            opt.textContent = state;
+            stateSelect.appendChild(opt);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading states:', error);
+        // Fallback
+        const fallback = ['Karnataka', 'Maharashtra', 'Delhi', 'Tamil Nadu'];
+        const stateSelect = document.getElementById('state');
+        fallback.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            stateSelect.appendChild(opt);
+        });
+    });
+
+function updateDistricts() {
+    const stateName = document.getElementById('state').value;
+    const districtSelect = document.getElementById('district');
+    districtSelect.innerHTML = '<option value="">-- Select District --</option>';
+    if (!stateName || !allStates[stateName]) {
+        districtSelect.disabled = true;
+        return;
+    }
+    allStates[stateName].forEach(district => {
+        const opt = document.createElement('option');
+        opt.value = district;
+        opt.textContent = district;
+        districtSelect.appendChild(opt);
+    });
+    districtSelect.disabled = false;
 }
 </script>
 {% endblock %}
