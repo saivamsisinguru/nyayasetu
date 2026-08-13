@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Contact Management{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-envelope me-2 text-accent"></i>Contact Management</h2>
+        <p class="text-muted">Edit contact details and view user messages</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="row mt-4 g-4">
+    <!-- Contact Details Form -->
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h5><i class="bi bi-pencil-square me-2 text-accent"></i>Contact Details</h5>
+            <hr>
+            <form method="POST" action="{{ url_for('admin_contact') }}">
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="text" class="form-control" name="phone" value="{{ contact.phone if contact else '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" value="{{ contact.email if contact else '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea class="form-control" name="address" rows="2">{{ contact.address if contact else '' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Working Hours</label>
+                    <input type="text" class="form-control" name="working_hours" value="{{ contact.working_hours if contact else '' }}">
+                </div>
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-save me-1"></i> Save Details
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contact Messages List -->
+    <div class="col-md-7">
+        <div class="card p-4">
+            <h5><i class="bi bi-chat-dots me-2 text-accent"></i>User Messages</h5>
+            <hr>
+            {% if messages %}
+                {% for msg in messages %}
+                <div class="p-3 mb-3" style="background: {% if not msg.is_read %}rgba(255,107,53,0.08){% else %}transparent{% endif %}; border-radius: 10px; border: 1px solid #1e3a5f;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <strong>{{ msg.name }}</strong>
+                        <small class="text-muted">{{ msg.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                    </div>
+                    <p class="mb-1"><small>{{ msg.email }} · {{ msg.phone }}</small></p>
+                    <p class="mb-1"><strong>Subject:</strong> {{ msg.subject }}</p>
+                    <p class="mb-2">{{ msg.message }}</p>
+                    <div>
+                        {% if not msg.is_read %}
+                        <a href="{{ url_for('admin_mark_message_read', msg_id=msg.id) }}" class="btn btn-sm btn-outline-accent">Mark Read</a>
+                        {% endif %}
+                        <a href="{{ url_for('admin_delete_message', msg_id=msg.id) }}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No messages yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
