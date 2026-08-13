@@ -1,167 +1,240 @@
 {% extends "base.html" %}
 {% block title %}Case Details{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center">
-    <h1>Case Details</h1>
-    <a href="{{ url_for('my_cases') }}" class="btn btn-outline-secondary">← Back to My Cases</a>
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-briefcase me-2 text-accent"></i>Case Details</h2>
+        <p class="text-muted">{{ case.legal_area | title }} - {{ case.sub_type | replace('_', ' ') | title }}</p>
+    </div>
+    <a href="{{ url_for('my_cases') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to My Cases
+    </a>
 </div>
 
-<div class="card mt-3">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h5>{{ case.legal_area | title }} - {{ case.sub_type | replace('_', ' ') | title }}</h5>
-                <p><strong>Advocate:</strong> {{ case.advocate_name }}</p>
-                <p><strong>City:</strong> {{ case.city }}</p>
-                <p><strong>Status:</strong> <span class="badge bg-success">{{ case.status }}</span></p>
-            </div>
-            <div class="col-md-6">
-                <p><strong>Created:</strong> {{ case.created_at.strftime('%d %b %Y, %H:%M') }}</p>
-                {% if case.description %}
-                <p><strong>Description:</strong> {{ case.description }}</p>
-                {% endif %}
-                <p><strong>Retainer Balance:</strong> ₹{{ case.retainer_balance }}</p>
-            </div>
+<!-- Case Overview Card -->
+<div class="card mt-3 p-4">
+    <div class="row">
+        <div class="col-md-6">
+            <p class="mb-2"><strong style="color: #a0b4c8;">Advocate:</strong> {{ case.advocate_name }}</p>
+            <p class="mb-2"><strong style="color: #a0b4c8;">City:</strong> {{ case.city }}</p>
+            <p class="mb-2">
+                <strong style="color: #a0b4c8;">Status:</strong> 
+                <span class="badge" style="background: rgba(255, 107, 53, 0.2); color: #ff6b35;">{{ case.status }}</span>
+            </p>
         </div>
+        <div class="col-md-6">
+            <p class="mb-2"><strong style="color: #a0b4c8;">Created:</strong> {{ case.created_at.strftime('%d %b %Y, %H:%M') }}</p>
+            <p class="mb-2"><strong style="color: #a0b4c8;">Total Paid:</strong> <span style="color: #10b981;">₹{{ case.total_paid }}</span></p>
+            <p class="mb-2"><strong style="color: #a0b4c8;">Retainer Balance:</strong> ₹{{ case.retainer_balance }}</p>
+        </div>
+        {% if case.description %}
+        <div class="col-12 mt-3">
+            <p class="mb-0"><strong style="color: #a0b4c8;">Description:</strong> {{ case.description }}</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <!-- Tabs -->
 <ul class="nav nav-tabs mt-4" id="caseTabs" role="tablist">
     <li class="nav-item">
-        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">Timeline</button>
+        <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">
+            <i class="bi bi-clock-history me-1"></i> Timeline
+        </button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" id="fees-tab" data-bs-toggle="tab" data-bs-target="#fees" type="button" role="tab">Fee Ledger</button>
+        <button class="nav-link" id="fees-tab" data-bs-toggle="tab" data-bs-target="#fees" type="button" role="tab">
+            <i class="bi bi-currency-rupee me-1"></i> Fee Ledger
+        </button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">Documents</button>
+        <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
+            <i class="bi bi-file-earmark me-1"></i> Documents
+        </button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab">Messages</button>
+        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab">
+            <i class="bi bi-chat-dots me-1"></i> Messages
+        </button>
     </li>
 </ul>
 
 <div class="tab-content mt-3">
-   <!-- Timeline Tab -->
-<div class="tab-pane fade" id="timeline" role="tabpanel">
-    <div class="card">
-        <div class="card-body">
-            {% if timeline %}
-            <ul class="list-group list-group-flush">
-                {% for event in timeline %}
-                <li class="list-group-item" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: white;">
-                    <span class="badge" style="background: rgba(255, 107, 53, 0.2); color: #ff6b35;">{{ event.event_type }}</span>
-                    {{ event.description }}
-                    <br>
-                    <small style="color: #64748b;">{{ event.created_at.strftime('%d %b %Y, %H:%M') }}</small>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-muted">No events yet.</p>
-            {% endif %}
-        </div>
-    </div>
-</div>
-    
-    <!-- Fee Ledger -->
-    <div class="tab-pane fade" id="fees" role="tabpanel">
-    <div class="card">
-        <div class="card-body">
-            {% if fees %}
-            <div class="table-responsive">
-                <table class="table table-dark" style="background: #0d1f3c; border-radius: 12px; overflow: hidden;">
-                    <thead>
-                        <tr>
-                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Date</th>
-                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Description</th>
-                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Amount</th>
-                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for fee in fees %}
-                        <tr>
-                            <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">{{ fee.created_at.strftime('%d %b %Y') }}</td>
-                            <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">{{ fee.description }}</td>
-                            <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">₹{{ fee.amount }}</td>
-                            <td style="border-bottom: 1px solid #1e3a5f; padding: 15px;">
-                                {% if fee.status == 'Paid' %}
-                                <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Paid</span>
-                                {% else %}
-                                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Pending</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        <tr style="background: #0a1628;">
-                            <td colspan="2" style="padding: 15px; color: #ffffff; font-weight: 700; border: none;">Total Paid</td>
-                            <td colspan="2" style="padding: 15px; color: #10b981; font-weight: 700; border: none;">₹{{ case.total_paid }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="text-muted">No fee entries yet.</p>
-            {% endif %}
-        </div>
-    </div>
-</div>
-    
-    <!-- Documents -->
-    <!-- Documents Tab -->
-<div class="tab-pane fade" id="documents" role="tabpanel">
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('upload_document', case_id=case.id) }}" enctype="multipart/form-data" class="mb-3">
-                <div class="input-group">
-                    <input type="file" class="form-control" name="document" required style="background: #0a1628; border: 1px solid #1e3a5f; color: white;">
-                    <button type="submit" class="btn btn-accent">Upload</button>
-                </div>
-            </form>
-            
-            {% if documents %}
-            <ul class="list-group">
-                {% for doc in documents %}
-                <li class="list-group-item d-flex justify-content-between" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: white;">
-                    <span>📄 {{ doc.filename }}</span>
-                    <small style="color: #64748b;">{{ doc.uploaded_at.strftime('%d %b %Y, %H:%M') }}</small>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-muted">No documents uploaded yet.</p>
-            {% endif %}
-        </div>
-    </div>
-</div>
-    
-    <!-- Messages -->
-    <!-- Messages Tab -->
-<div class="tab-pane fade" id="messages" role="tabpanel">
-    <div class="card">
-        <div class="card-body">
-            <div class="mb-3" style="max-height: 300px; overflow-y: auto;">
-                {% if messages %}
-                    {% for msg in messages %}
-                    <div class="mb-3 p-3" style="background: #0a1628; border-radius: 10px; border: 1px solid #1e3a5f;">
-                        <strong style="color: #ff6b35;">{{ 'You' if msg.sender == 'client' else case.advocate_name }}:</strong>
-                        <span style="color: #ffffff;">{{ msg.content }}</span>
-                        <br>
-                        <small style="color: #64748b;">{{ msg.created_at.strftime('%d %b, %H:%M') }}</small>
+    <!-- Timeline Tab -->
+    <div class="tab-pane fade show active" id="timeline" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <!-- Case Status Banner with Update Buttons -->
+                <div class="alert mb-4" style="background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.3); border-radius: 12px;">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <strong style="color: #ff6b35;">Current Status:</strong>
+                            <span style="color: #ffffff;">{{ case.status }}</span>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('simulate_lawyer_update', case_id=case.id) }}" class="btn btn-sm btn-accent me-2">
+                                <i class="bi bi-arrow-repeat me-1"></i> Simulate Lawyer Update
+                            </a>
+                            <button class="btn btn-sm btn-outline-accent" type="button" data-bs-toggle="collapse" data-bs-target="#addUpdateForm">
+                                <i class="bi bi-plus-circle me-1"></i> Add Update
+                            </button>
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Add Update Form (Collapsible) -->
+                <div class="collapse mb-4" id="addUpdateForm">
+                    <form method="POST" action="{{ url_for('add_case_update', case_id=case.id) }}" class="p-3" style="background: #0a1628; border-radius: 10px; border: 1px solid #1e3a5f;">
+                        <div class="mb-2">
+                            <label class="form-label">Update Type</label>
+                            <select class="form-select" name="update_type">
+                                <option value="Hearing">Hearing</option>
+                                <option value="Filing">Filing</option>
+                                <option value="Order">Order</option>
+                                <option value="Status Change">Status Change</option>
+                                <option value="Note">Note</option>
+                                <option value="Resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" name="title" placeholder="e.g. Hearing scheduled for 25 Aug">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="2" placeholder="Additional details..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-accent btn-sm">
+                            <i class="bi bi-check-circle me-1"></i> Submit Update
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Timeline Events -->
+                {% if timeline %}
+                <ul class="list-group list-group-flush">
+                    {% for event in timeline %}
+                    <li class="list-group-item" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: white;">
+                        <span class="badge" style="background: rgba(255, 107, 53, 0.2); color: #ff6b35;">{{ event.event_type }}</span>
+                        {{ event.description }}
+                        <br>
+                        <small style="color: #64748b;">{{ event.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                    </li>
                     {% endfor %}
+                </ul>
                 {% else %}
-                    <p class="text-muted">No messages yet. Start the conversation.</p>
+                <p class="text-muted">No events yet.</p>
                 {% endif %}
             </div>
-            <form method="POST" action="{{ url_for('send_message', case_id=case.id) }}">
-                <div class="input-group">
-                    <input type="text" class="form-control" name="message" placeholder="Type your message..." required style="background: #0a1628; border: 1px solid #1e3a5f; color: white;">
-                    <button type="submit" class="btn btn-accent">Send</button>
+        </div>
+    </div>
+    
+    <!-- Fee Ledger Tab -->
+    <div class="tab-pane fade" id="fees" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                {% if fees %}
+                <div class="table-responsive">
+                    <table class="table" style="background: #0d1f3c; border-radius: 12px; overflow: hidden;">
+                        <thead>
+                            <tr>
+                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Date</th>
+                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Description</th>
+                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Amount</th>
+                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fee in fees %}
+                            <tr>
+                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">{{ fee.created_at.strftime('%d %b %Y') }}</td>
+                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">{{ fee.description }}</td>
+                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">₹{{ fee.amount }}</td>
+                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px;">
+                                    {% if fee.status == 'Paid' %}
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Paid</span>
+                                    {% else %}
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr style="background: #0a1628;">
+                                <td colspan="2" style="padding: 15px; color: #ffffff; font-weight: 700; border: none;">Total Paid</td>
+                                <td colspan="2" style="padding: 15px; color: #10b981; font-weight: 700; border: none;">₹{{ case.total_paid }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-            </form>
+                {% else %}
+                <p class="text-muted">No fee entries yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Documents Tab -->
+    <div class="tab-pane fade" id="documents" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('upload_document', case_id=case.id) }}" enctype="multipart/form-data" class="mb-3">
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="document" required style="background: #0a1628; border: 1px solid #1e3a5f; color: white;">
+                        <button type="submit" class="btn btn-accent">
+                            <i class="bi bi-upload me-1"></i> Upload
+                        </button>
+                    </div>
+                </form>
+                
+                {% if documents %}
+                <ul class="list-group">
+                    {% for doc in documents %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: white;">
+                        <span><i class="bi bi-file-earmark-text me-2 text-accent"></i>{{ doc.filename }}</span>
+                        <small style="color: #64748b;">{{ doc.uploaded_at.strftime('%d %b %Y, %H:%M') }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-folder2-open" style="font-size: 3rem; color: #64748b;"></i>
+                    <p class="text-muted mt-2">No documents uploaded yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Messages Tab -->
+    <div class="tab-pane fade" id="messages" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3" style="max-height: 350px; overflow-y: auto;">
+                    {% if messages %}
+                        {% for msg in messages %}
+                        <div class="mb-3 p-3" style="background: #0a1628; border-radius: 10px; border: 1px solid #1e3a5f;">
+                            <strong style="color: #ff6b35;">{{ 'You' if msg.sender == 'client' else case.advocate_name }}:</strong>
+                            <span style="color: #ffffff;">{{ msg.content }}</span>
+                            <br>
+                            <small style="color: #64748b;">{{ msg.created_at.strftime('%d %b, %H:%M') }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-chat" style="font-size: 3rem; color: #64748b;"></i>
+                            <p class="text-muted mt-2">No messages yet. Start the conversation.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <form method="POST" action="{{ url_for('send_message', case_id=case.id) }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="message" placeholder="Type your message..." required style="background: #0a1628; border: 1px solid #1e3a5f; color: white;">
+                        <button type="submit" class="btn btn-accent">
+                            <i class="bi bi-send me-1"></i> Send
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
