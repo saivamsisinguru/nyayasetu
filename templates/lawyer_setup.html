@@ -81,18 +81,18 @@
                     </div>
                 </div>
 
-                <!-- Regions (Dynamic rows) -->
+                <!-- Regions (Dynamic rows with proper names) -->
                 <div class="mb-3">
                     <label class="form-label">Regions Served</label>
                     <div id="regions-container">
                         <div class="row mb-2">
                             <div class="col">
-                                <select class="form-select region-state" onchange="updateDistricts(this)">
+                                <select class="form-select region-state" name="region_state" onchange="updateDistricts(this)">
                                     <option value="">Select State</option>
                                 </select>
                             </div>
                             <div class="col">
-                                <select class="form-select region-district">
+                                <select class="form-select region-district" name="region_district">
                                     <option value="">Select District</option>
                                 </select>
                             </div>
@@ -148,12 +148,12 @@ function addRegion() {
     newRow.className = 'row mb-2';
     newRow.innerHTML = `
         <div class="col">
-            <select class="form-select region-state" onchange="updateDistricts(this)">
+            <select class="form-select region-state" name="region_state" onchange="updateDistricts(this)">
                 <option value="">Select State</option>
             </select>
         </div>
         <div class="col">
-            <select class="form-select region-district">
+            <select class="form-select region-district" name="region_district">
                 <option value="">Select District</option>
             </select>
         </div>
