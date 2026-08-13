@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Manage Lawyers{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-people me-2 text-accent"></i>Manage Lawyers</h2>
+        <p class="text-muted">View, verify, and manage all advocate profiles</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Filter Tabs -->
+<ul class="nav nav-tabs mt-4" id="lawyerTabs" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all" type="button">All</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pending" type="button">Pending</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#verified" type="button">Verified</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#rejected" type="button">Rejected</button>
+    </li>
+</ul>
+
+<div class="tab-content mt-3">
+    <!-- All Lawyers -->
+    <div class="tab-pane fade show active" id="all">
+        <div class="card p-4">
+            {% if lawyers %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Bar Council ID</th>
+                            <th>Experience</th>
+                            <th>Fee (₹)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in lawyers %}
+                        <tr>
+                            <td>{{ lawyer.name or 'N/A' }}</td>
+                            <td>{{ lawyer.phone }}</td>
+                            <td>{{ lawyer.bar_council_id or 'N/A' }}</td>
+                            <td>{{ lawyer.experience_level }}</td>
+                            <td>₹{{ lawyer.consultation_fee }}</td>
+                            <td>
+                                {% if lawyer.verification_status == 'verified' %}
+                                <span class="badge bg-success">Verified</span>
+                                {% elif lawyer.verification_status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif lawyer.verification_status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% elif lawyer.verification_status == 'suspended' %}
+                                <span class="badge bg-secondary">Suspended</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if lawyer.verification_status == 'pending' %}
+                                <a href="{{ url_for('admin_verify_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-success">Approve</a>
+                                <a href="{{ url_for('admin_reject_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-danger">Reject</a>
+                                {% elif lawyer.verification_status == 'verified' %}
+                                <a href="{{ url_for('admin_suspend_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-outline-warning">Suspend</a>
+                                {% elif lawyer.verification_status == 'suspended' %}
+                                <a href="{{ url_for('admin_unsuspend_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-outline-success">Unsuspend</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No lawyers found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pending Only (similar table filtered) -->
+    <div class="tab-pane fade" id="pending">
+        <div class="card p-4">
+            {% set pending_lawyers = lawyers | selectattr('verification_status', 'equalto', 'pending') | list %}
+            {% if pending_lawyers %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Bar Council ID</th>
+                            <th>Fee (₹)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in pending_lawyers %}
+                        <tr>
+                            <td>{{ lawyer.name or 'N/A' }}</td>
+                            <td>{{ lawyer.phone }}</td>
+                            <td>{{ lawyer.bar_council_id or 'N/A' }}</td>
+                            <td>₹{{ lawyer.consultation_fee }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_verify_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-success">Approve</a>
+                                <a href="{{ url_for('admin_reject_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-danger">Reject</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No pending lawyers.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Verified Only -->
+    <div class="tab-pane fade" id="verified">
+        <div class="card p-4">
+            {% set verified_lawyers = lawyers | selectattr('verification_status', 'equalto', 'verified') | list %}
+            {% if verified_lawyers %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Experience</th>
+                            <th>Fee (₹)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in verified_lawyers %}
+                        <tr>
+                            <td>{{ lawyer.name or 'N/A' }}</td>
+                            <td>{{ lawyer.phone }}</td>
+                            <td>{{ lawyer.experience_level }}</td>
+                            <td>₹{{ lawyer.consultation_fee }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_suspend_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-outline-warning">Suspend</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No verified lawyers.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Rejected Only -->
+    <div class="tab-pane fade" id="rejected">
+        <div class="card p-4">
+            {% set rejected_lawyers = lawyers | selectattr('verification_status', 'equalto', 'rejected') | list %}
+            {% if rejected_lawyers %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Bar Council ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in rejected_lawyers %}
+                        <tr>
+                            <td>{{ lawyer.name or 'N/A' }}</td>
+                            <td>{{ lawyer.phone }}</td>
+                            <td>{{ lawyer.bar_council_id or 'N/A' }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_verify_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-success">Re-approve</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No rejected lawyers.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
