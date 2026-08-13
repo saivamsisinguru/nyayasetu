@@ -19,9 +19,30 @@ class User(UserMixin, db.Model):
     cases = db.relationship('Case', backref='client', lazy=True)
     notifications = db.relationship('Notification', backref='user', lazy=True)
 
+class Lawyer(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(15), unique=True, nullable=False)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(120))
+    bar_council_id = db.Column(db.String(50))
+    enrolment_year = db.Column(db.Integer)
+    courts = db.Column(db.String(200))
+    languages = db.Column(db.String(200))
+    practice_areas = db.Column(db.String(500))
+    consultation_fee = db.Column(db.Integer, default=1200)
+    hearing_fee = db.Column(db.Integer, default=5000)
+    is_verified = db.Column(db.Boolean, default=False)
+    is_available = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    consultation_requests = db.relationship('ConsultationRequest', backref='lawyer', lazy=True)
+    assigned_cases = db.relationship('Case', backref='assigned_lawyer', lazy=True, foreign_keys='Case.lawyer_id')
+
 class Case(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    lawyer_id = db.Column(db.Integer, db.ForeignKey('lawyer.id'))
     advocate_name = db.Column(db.String(100))
     legal_area = db.Column(db.String(50))
     sub_type = db.Column(db.String(50))
@@ -43,6 +64,20 @@ class Case(db.Model):
     fee_entries = db.relationship('FeeEntry', backref='case', lazy=True)
     case_updates = db.relationship('CaseUpdate', backref='case', lazy=True)
 
+class ConsultationRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    lawyer_id = db.Column(db.Integer, db.ForeignKey('lawyer.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    legal_area = db.Column(db.String(50))
+    sub_type = db.Column(db.String(50))
+    city = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    status = db.Column(db.String(20), default='Pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    client = db.relationship('User', backref='consultation_requests')
+
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
@@ -53,7 +88,7 @@ class Document(db.Model):
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
-    sender = db.Column(db.String(50))  # 'client' or 'lawyer'
+    sender = db.Column(db.String(50))
     content = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -75,7 +110,7 @@ class FeeEntry(db.Model):
 class CaseUpdate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
-    update_type = db.Column(db.String(50))  # Hearing, Order, Filing, Status Change, Note, Resolved
+    update_type = db.Column(db.String(50))
     title = db.Column(db.String(200))
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -96,37 +131,3 @@ class Payment(db.Model):
     payment_type = db.Column(db.String(50))
     status = db.Column(db.String(20), default='Paid')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Lawyer(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    phone = db.Column(db.String(15), unique=True, nullable=False)
-    name = db.Column(db.String(100))
-    email = db.Column(db.String(120))
-    bar_council_id = db.Column(db.String(50))
-    enrolment_year = db.Column(db.Integer)
-    courts = db.Column(db.String(200))
-    languages = db.Column(db.String(200))
-    practice_areas = db.Column(db.String(500))
-    consultation_fee = db.Column(db.Integer, default=1200)
-    hearing_fee = db.Column(db.Integer, default=5000)
-    is_verified = db.Column(db.Boolean, default=False)
-    is_available = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    consultation_requests = db.relationship('ConsultationRequest', backref='lawyer', lazy=True)
-    assigned_cases = db.relationship('Case', backref='assigned_lawyer', lazy=True)
-
-class ConsultationRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    lawyer_id = db.Column(db.Integer, db.ForeignKey('lawyer.id'), nullable=False)
-    client_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    legal_area = db.Column(db.String(50))
-    sub_type = db.Column(db.String(50))
-    city = db.Column(db.String(100))
-    description = db.Column(db.Text)
-    status = db.Column(db.String(20), default='Pending')  # Pending, Accepted, Declined
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    client = db.relationship('User', backref='consultation_requests')
