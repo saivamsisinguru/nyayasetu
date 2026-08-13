@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Manage Clients{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-person me-2 text-accent"></i>Manage Clients</h2>
+        <p class="text-muted">View and manage all client accounts</p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="card mt-4 p-4">
+    {% if clients %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>State</th>
+                    <th>District</th>
+                    <th>Cases</th>
+                    <th>Total Paid (₹)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr>
+                    <td>{{ client.name or 'N/A' }}</td>
+                    <td>{{ client.phone }}</td>
+                    <td>{{ client.email or 'N/A' }}</td>
+                    <td>{{ client.state or 'N/A' }}</td>
+                    <td>{{ client.district or 'N/A' }}</td>
+                    <td>{{ client.cases|length }}</td>
+                    <td>₹{{ client.total_paid }}</td>
+                    <td>
+                        {% if client.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Suspended</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if client.is_active %}
+                        <a href="{{ url_for('admin_suspend_client', client_id=client.id) }}" class="btn btn-sm btn-outline-warning">Suspend</a>
+                        {% else %}
+                        <a href="{{ url_for('admin_unsuspend_client', client_id=client.id) }}" class="btn btn-sm btn-outline-success">Unsuspend</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-4">No clients found.</p>
+    {% endif %}
+</div>
+{% endblock %}
