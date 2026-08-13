@@ -111,6 +111,22 @@ def consult_request():
     session['advocate_name'] = 'Adv. Priya Menon'
     session['advocate_fee'] = 1200
     session['platform_fee'] = 149
+    
+    # Create consultation request for the lawyer
+    lawyer = Lawyer.query.first()
+    if lawyer:
+        cons_req = ConsultationRequest(
+            lawyer_id=lawyer.id,
+            client_id=current_user.id,
+            legal_area=session.get('legal_area', ''),
+            sub_type=session.get('sub_type', ''),
+            city=session.get('city', ''),
+            description=session.get('description', ''),
+            status='Pending'
+        )
+        db.session.add(cons_req)
+        db.session.commit()
+    
     return render_template('consult_request_sent.html')
 
 @app.route('/consult/payment')
