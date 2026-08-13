@@ -14,6 +14,10 @@ class User(UserMixin, db.Model):
     is_lawyer = db.Column(db.Boolean, default=False)
     onboarding_complete = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    cases = db.relationship('Case', backref='client', lazy=True)
+    notifications = db.relationship('Notification', backref='user', lazy=True)
 
 class Case(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -37,6 +41,7 @@ class Case(db.Model):
     messages = db.relationship('Message', backref='case', lazy=True)
     timeline_events = db.relationship('TimelineEvent', backref='case', lazy=True)
     fee_entries = db.relationship('FeeEntry', backref='case', lazy=True)
+    case_updates = db.relationship('CaseUpdate', backref='case', lazy=True)
 
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,7 +69,15 @@ class FeeEntry(db.Model):
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
     description = db.Column(db.String(200))
     amount = db.Column(db.Integer)
-    status = db.Column(db.String(20), default='Paid')  # Paid, Pending
+    status = db.Column(db.String(20), default='Paid')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class CaseUpdate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
+    update_type = db.Column(db.String(50))  # Hearing, Order, Filing, Status Change, Note, Resolved
+    title = db.Column(db.String(200))
+    description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Notification(db.Model):
@@ -80,6 +93,6 @@ class Payment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     case_id = db.Column(db.Integer, db.ForeignKey('case.id'))
     amount = db.Column(db.Integer)
-    payment_type = db.Column(db.String(50))  # Consultation Fee, Hearing Fee, Platform Fee, Retainer
+    payment_type = db.Column(db.String(50))
     status = db.Column(db.String(20), default='Paid')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
