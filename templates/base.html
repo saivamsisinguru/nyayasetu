@@ -34,7 +34,6 @@
             min-height: 100vh;
         }
         
-        /* Force ALL text to be light colored */
         body * {
             color: var(--text-primary);
         }
@@ -119,7 +118,6 @@
         .btn-outline-accent:hover {
             background: var(--accent);
             color: white !important;
-            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.2);
         }
         
         .btn-outline-secondary {
@@ -129,7 +127,6 @@
             padding: 10px 24px;
             font-weight: 500;
             background: transparent;
-            transition: all 0.3s;
         }
         
         .btn-outline-secondary:hover {
@@ -144,7 +141,6 @@
             border-radius: 10px;
             padding: 12px 18px;
             color: var(--text-primary) !important;
-            transition: all 0.3s;
         }
         
         .form-control:focus, .form-select:focus {
@@ -180,27 +176,6 @@
             padding: 6px 14px;
             font-weight: 600;
             font-size: 0.8rem;
-            color: white !important;
-        }
-        
-        .badge.bg-success {
-            background: rgba(16, 185, 129, 0.2) !important;
-            color: var(--success) !important;
-        }
-        
-        .badge.bg-warning {
-            background: rgba(245, 158, 11, 0.2) !important;
-            color: var(--warning) !important;
-        }
-        
-        .badge.bg-danger {
-            background: rgba(239, 68, 68, 0.2) !important;
-            color: var(--danger) !important;
-        }
-        
-        .badge.bg-primary {
-            background: rgba(255, 107, 53, 0.2) !important;
-            color: var(--accent) !important;
         }
         
         .alert {
@@ -222,24 +197,12 @@
             color: var(--text-secondary) !important;
             border-bottom: 1px solid var(--border-color);
             padding: 15px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
         .table td {
             border-bottom: 1px solid var(--border-color);
             padding: 15px;
             color: var(--text-primary) !important;
-        }
-        
-        .table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .table tr:hover td {
-            background: rgba(255, 107, 53, 0.05);
         }
         
         .nav-tabs {
@@ -252,11 +215,6 @@
             border-bottom: 2px solid transparent;
             font-weight: 600;
             padding: 12px 20px;
-            background: transparent;
-        }
-        
-        .nav-tabs .nav-link:hover {
-            color: var(--text-primary) !important;
             background: transparent;
         }
         
@@ -282,18 +240,6 @@
         
         .text-muted {
             color: #94a3b8 !important;
-        }
-        
-        .text-success {
-            color: var(--success) !important;
-        }
-        
-        .text-warning {
-            color: var(--warning) !important;
-        }
-        
-        .text-danger {
-            color: var(--danger) !important;
         }
         
         .text-accent {
@@ -334,63 +280,63 @@
         .btn-close {
             filter: invert(1);
         }
-        
-        .modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-        
-        .modal-header, .modal-footer {
-            border-color: var(--border-color);
-        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
-    <div class="container">
-        <a class="navbar-brand" href="{% if current_user.is_authenticated %}{{ url_for('dashboard') }}{% else %}{{ url_for('index') }}{% endif %}" style="display: flex; align-items: center;">
-            <span style="display: inline-block; background: linear-gradient(135deg, #ff6b35, #ffa500); width: 45px; height: 45px; border-radius: 12px; text-align: center; line-height: 45px; margin-right: 12px; box-shadow: 0 4px 15px rgba(255,107,53,0.4);">
-                <i class="bi bi-scale" style="color: white; font-size: 1.4rem;"></i>
-            </span>
-            <span>
-                <span style="color: #ff6b35; font-weight: 800; font-size: 1.3rem;">Nyaya</span><span style="color: white; font-weight: 800; font-size: 1.3rem;">Setu</span>
-                <br>
-                <small style="color: #a0b4c8; font-size: 0.65rem; letter-spacing: 1px;">YOUR CASE, CONNECTED</small>
-            </span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-center">
-                {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dashboard') }}">
-                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('my_cases') }}">
-                        <i class="bi bi-folder2-open me-1"></i> My Cases
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('logout') }}">
-                        <i class="bi bi-box-arrow-right me-1"></i> Logout
-                    </a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('login') }}">
-                        <i class="bi bi-person me-1"></i> Login
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
+        <div class="container">
+            <a class="navbar-brand" href="{% if current_user.is_authenticated %}{{ url_for('dashboard') }}{% else %}{{ url_for('index') }}{% endif %}" style="display: flex; align-items: center;">
+                <span style="display: inline-block; background: linear-gradient(135deg, #ff6b35, #ffa500); width: 45px; height: 45px; border-radius: 12px; text-align: center; line-height: 45px; margin-right: 12px; box-shadow: 0 4px 15px rgba(255,107,53,0.4);">
+                    <i class="bi bi-scale" style="color: white; font-size: 1.4rem;"></i>
+                </span>
+                <span>
+                    <span style="color: #ff6b35; font-weight: 800; font-size: 1.3rem;">Nyaya</span><span style="color: white; font-weight: 800; font-size: 1.3rem;">Setu</span>
+                    <br>
+                    <small style="color: #a0b4c8; font-size: 0.65rem; letter-spacing: 1px;">YOUR CASE, CONNECTED</small>
+                </span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('notifications') }}" style="position: relative;">
+                            <i class="bi bi-bell"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('my_cases') }}">
+                            <i class="bi bi-folder2-open me-1"></i> My Cases
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile') }}">
+                            <i class="bi bi-person-circle me-1"></i> Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right me-1"></i> Logout
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">
+                            <i class="bi bi-person me-1"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <div class="container mt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
