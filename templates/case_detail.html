@@ -130,48 +130,49 @@
     </div>
     
     <!-- Fee Ledger Tab -->
-    <div class="tab-pane fade" id="fees" role="tabpanel">
-        <div class="card">
-            <div class="card-body">
-                {% if fees %}
-                <div class="table-responsive">
-                    <table class="table" style="background: #0d1f3c; border-radius: 12px; overflow: hidden;">
-                        <thead>
-                            <tr>
-                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Date</th>
-                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Description</th>
-                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Amount</th>
-                                <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px; font-size: 0.85rem; text-transform: uppercase;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for fee in fees %}
-                            <tr>
-                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">{{ fee.created_at.strftime('%d %b %Y') }}</td>
-                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">{{ fee.description }}</td>
-                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px; color: #ffffff;">₹{{ fee.amount }}</td>
-                                <td style="border-bottom: 1px solid #1e3a5f; padding: 15px;">
-                                    {% if fee.status == 'Paid' %}
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Paid</span>
-                                    {% else %}
-                                    <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Pending</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            <tr style="background: #0a1628;">
-                                <td colspan="2" style="padding: 15px; color: #ffffff; font-weight: 700; border: none;">Total Paid</td>
-                                <td colspan="2" style="padding: 15px; color: #10b981; font-weight: 700; border: none;">₹{{ case.total_paid }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-muted">No fee entries yet.</p>
-                {% endif %}
+   <!-- Fee Ledger Tab -->
+<div class="tab-pane fade" id="fees" role="tabpanel">
+    <div class="card" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
+        <div class="card-body" style="background: #0d1f3c;">
+            {% if fees %}
+            <div class="table-responsive" style="background: #0d1f3c; border-radius: 12px;">
+                <table style="width: 100%; background: #0d1f3c; border-collapse: collapse; color: #ffffff;">
+                    <thead>
+                        <tr style="background: #0a1628;">
+                            <th style="padding: 15px; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; text-align: left; font-size: 0.85rem; text-transform: uppercase;">Date</th>
+                            <th style="padding: 15px; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; text-align: left; font-size: 0.85rem; text-transform: uppercase;">Description</th>
+                            <th style="padding: 15px; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; text-align: left; font-size: 0.85rem; text-transform: uppercase;">Amount</th>
+                            <th style="padding: 15px; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; text-align: left; font-size: 0.85rem; text-transform: uppercase;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr style="background: #0d1f3c;">
+                            <td style="padding: 15px; color: #ffffff; border-bottom: 1px solid #1e3a5f;">{{ fee.created_at.strftime('%d %b %Y') }}</td>
+                            <td style="padding: 15px; color: #ffffff; border-bottom: 1px solid #1e3a5f;">{{ fee.description }}</td>
+                            <td style="padding: 15px; color: #ffffff; border-bottom: 1px solid #1e3a5f;">₹{{ fee.amount }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f;">
+                                {% if fee.status == 'Paid' %}
+                                <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 5px 12px; border-radius: 20px; font-weight: 600;">Paid</span>
+                                {% else %}
+                                <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 5px 12px; border-radius: 20px; font-weight: 600;">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr style="background: #0a1628;">
+                            <td colspan="2" style="padding: 15px; color: #ffffff; font-weight: 700; border: none;">Total Paid</td>
+                            <td colspan="2" style="padding: 15px; color: #10b981; font-weight: 700; border: none;">₹{{ case.total_paid }}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+            {% else %}
+            <p style="color: #94a3b8;">No fee entries yet.</p>
+            {% endif %}
         </div>
     </div>
+</div>
     
     <!-- Documents Tab -->
     <div class="tab-pane fade" id="documents" role="tabpanel">
