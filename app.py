@@ -396,15 +396,22 @@ def lawyer_setup():
         LawyerRegion.query.filter_by(lawyer_id=current_user.id).delete()
         LawyerLanguage.query.filter_by(lawyer_id=current_user.id).delete()
         LawyerPracticeArea.query.filter_by(lawyer_id=current_user.id).delete()
-        db.session.flush()  # ensure deletion before adding new
+        db.session.flush()
 
-        # Add regions (multiple)
+        # Add regions (multiple) with requirement check
         region_states = request.form.getlist('region_state')
         region_districts = request.form.getlist('region_district')
+        region_count = 0
         for i in range(len(region_states)):
             if region_states[i] and region_districts[i]:
                 region = LawyerRegion(lawyer_id=current_user.id, state=region_states[i], district=region_districts[i])
                 db.session.add(region)
+                region_count += 1
+
+        if region_count == 0:
+            db.session.rollback()
+            flash('Please add at least one region you serve.', 'danger')
+            return redirect(url_for('lawyer_setup'))
 
         # Add languages
         langs = request.form.getlist('languages')
@@ -424,7 +431,7 @@ def lawyer_setup():
         return redirect(url_for('lawyer_dashboard'))
 
     return render_template('lawyer_setup.html')
-
+    
 @app.route('/lawyer/dashboard')
 @login_required
 def lawyer_dashboard():
