@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     district = db.Column(db.String(100))
     is_lawyer = db.Column(db.Boolean, default=False)
     onboarding_complete = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)   # <-- added
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     cases = db.relationship('Case', backref='client', lazy=True)
@@ -32,8 +33,8 @@ class Lawyer(UserMixin, db.Model):
     hearing_fee = db.Column(db.Integer, default=5000)
     is_verified = db.Column(db.Boolean, default=False)
     is_available = db.Column(db.Boolean, default=True)
+    verification_status = db.Column(db.String(20), default='pending')   # pending, verified, rejected, suspended
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    verification_status = db.Column(db.String(20), default='pending')
     
     consultation_requests = db.relationship('ConsultationRequest', backref='lawyer', lazy=True)
     assigned_cases = db.relationship('Case', backref='assigned_lawyer', lazy=True, foreign_keys='Case.lawyer_id')
@@ -70,7 +71,7 @@ class ConsultationRequest(db.Model):
     fee_range_min = db.Column(db.Integer)
     fee_range_max = db.Column(db.Integer)
     language = db.Column(db.String(50))
-    status = db.Column(db.String(20), default='Pending')
+    status = db.Column(db.String(20), default='Pending')  # Pending, Accepted, Declined
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     client = db.relationship('User', backref='consultation_requests')
@@ -154,7 +155,6 @@ class Payment(db.Model):
     status = db.Column(db.String(20), default='Paid')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Add new Admin model at the end
 class Admin(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     phone = db.Column(db.String(15), unique=True, nullable=False)
