@@ -17,19 +17,13 @@ login_manager.login_message = 'Please log in to access this page.'
 
 @login_manager.user_loader
 def load_user(user_id):
-    # Try User first
-    user = db.session.get(User, int(user_id))
-    if user:
-        return user
-    # Then Lawyer
-    lawyer = db.session.get(Lawyer, int(user_id))
-    if lawyer:
-        return lawyer
-    # Then Admin
-    admin = db.session.get(Admin, int(user_id))
-    if admin:
-        return admin
-    return None
+    user_type = session.get('user_type', 'client')
+    if user_type == 'lawyer':
+        return db.session.get(Lawyer, int(user_id))
+    elif user_type == 'admin':
+        return db.session.get(Admin, int(user_id))
+    else:
+        return db.session.get(User, int(user_id))
 
 # --- Routes ---
 
@@ -47,6 +41,7 @@ def login():
             db.session.add(user)
             db.session.commit()
         login_user(user)
+        session['user_type'] = 'client'
         if not user.onboarding_complete:
             return redirect(url_for('onboarding'))
         else:
@@ -445,6 +440,7 @@ def lawyer_login():
             db.session.add(lawyer)
             db.session.commit()
         login_user(lawyer)
+        session['user_type'] = 'lawyer'
         if not lawyer.name or not lawyer.regions or not lawyer.languages:
             return redirect(url_for('lawyer_setup'))
         elif lawyer.verification_status != 'verified':
@@ -685,6 +681,7 @@ def lawyer_upload_document(case_id):
 @app.route('/lawyer/logout')
 def lawyer_logout():
     logout_user()
+    session.clear()
     return redirect(url_for('index'))
 
 # --- Admin Routes ---
@@ -696,6 +693,7 @@ def admin_login():
         admin = Admin.query.filter_by(phone=phone).first()
         if admin:
             login_user(admin)
+            session['user_type'] = 'admin'
             return redirect(url_for('admin_dashboard'))
         else:
             flash('Admin not found.', 'danger')
@@ -737,6 +735,7 @@ def admin_reject_lawyer(lawyer_id):
 @app.route('/admin/logout')
 def admin_logout():
     logout_user()
+    session.clear()
     return redirect(url_for('index'))
 
 # --- Logout (generic) ---
