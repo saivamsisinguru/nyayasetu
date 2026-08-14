@@ -4,7 +4,7 @@ from config import Config
 from models import (db, User, Lawyer, Admin, Case, Document, Message, TimelineEvent,
                     FeeEntry, CaseUpdate, Notification, Payment, ConsultationRequest,
                     LawyerRegion, LawyerLanguage, LawyerPracticeArea,
-                    ContactDetails, ContactMessage)
+                    ContactDetails, ContactMessage, LawyerNotification)
 from datetime import datetime
 import os
 import random
@@ -42,7 +42,6 @@ def contact_us():
         phone = request.form.get('phone', '').strip()
         subject = request.form.get('subject', '').strip()
         message = request.form.get('message', '').strip()
-
         if name and email and subject and message:
             msg = ContactMessage(name=name, email=email, phone=phone, subject=subject, message=message)
             db.session.add(msg)
@@ -181,7 +180,7 @@ def consult_results():
 def consult_advocate_card(lawyer_id):
     if not isinstance(current_user, User):
         return redirect(url_for('index'))
-    lawyer = Lawyer.query.get(lawyer_id)
+    lawyer = db.session.get(Lawyer, lawyer_id)
     if not lawyer:
         return redirect(url_for('consult_results'))
     session['advocate_name'] = lawyer.name or 'Advocate'
@@ -195,7 +194,7 @@ def consult_advocate_card(lawyer_id):
 def consult_request():
     if not isinstance(current_user, User):
         return redirect(url_for('index'))
-    lawyer = Lawyer.query.get(session.get('selected_lawyer_id'))
+    lawyer = db.session.get(Lawyer, session.get('selected_lawyer_id'))
     if not lawyer:
         flash('Please select an advocate first.', 'error')
         return redirect(url_for('consult_results'))
@@ -227,7 +226,16 @@ def consult_request():
         status='Pending'
     )
     db.session.add(cons_req)
+
+    # Create notification for lawyer
+    notif = LawyerNotification(
+        lawyer_id=lawyer.id,
+        title='New Consultation Request',
+        message=f'{current_user.phone} requested a consultation for {session.get("legal_area", "")}.'
+    )
+    db.session.add(notif)
     db.session.commit()
+
     return render_template('consult_request_sent.html')
 
 @app.route('/consult/payment')
@@ -237,30 +245,38 @@ def consult_payment():
         return redirect(url_for('index'))
     if not session.get('advocate_name'):
         return redirect(url_for('dashboard'))
+    advocate_fee = session.get('advocate_fee', 1200)
+    platform_fee = session.get('platform_fee', 149)
+    total = advocate_fee + platform_fee
     return render_template('consult_payment.html',
                          advocate_name=session.get('advocate_name'),
-                         advocate_fee=session.get('advocate_fee', 1200),
-                         platform_fee=session.get('platform_fee', 149),
-                         total=session.get('advocate_fee', 1200) + session.get('platform_fee', 149))
+                         advocate_fee=advocate_fee,
+                         platform_fee=platform_fee,
+                         total=total)
 
 @app.route('/consult/confirmation', methods=['POST'])
 @login_required
 def consult_confirmation():
     if not isinstance(current_user, User):
         return redirect(url_for('index'))
+    advocate_name = session.get('advocate_name', 'Advocate')
+    advocate_fee = session.get('advocate_fee', 1200)
+    platform_fee = session.get('platform_fee', 149)
+    total_paid = advocate_fee + platform_fee
+
     new_case = Case(
         user_id=current_user.id,
         lawyer_id=session.get('selected_lawyer_id'),
-        advocate_name=session.get('advocate_name', 'Advocate'),
+        advocate_name=advocate_name,
         legal_area=session.get('legal_area', ''),
         sub_type=session.get('sub_type', ''),
         city=session.get('city', ''),
         state=session.get('state', ''),
         district=session.get('district', ''),
         description=session.get('description', ''),
-        advocate_fee=session.get('advocate_fee', 1200),
-        platform_fee=session.get('platform_fee', 149),
-        total_paid=session.get('advocate_fee', 1200) + session.get('platform_fee', 149),
+        advocate_fee=advocate_fee,
+        platform_fee=platform_fee,
+        total_paid=total_paid,
         status='Active'
     )
     db.session.add(new_case)
@@ -268,12 +284,12 @@ def consult_confirmation():
 
     event = TimelineEvent(case_id=new_case.id, event_type='Consultation', description='Consultation booked and payment received')
     db.session.add(event)
-    fee1 = FeeEntry(case_id=new_case.id, description='Consultation Fee', amount=session.get('advocate_fee', 1200), status='Paid')
-    fee2 = FeeEntry(case_id=new_case.id, description='Platform Fee', amount=session.get('platform_fee', 149), status='Paid')
+    fee1 = FeeEntry(case_id=new_case.id, description='Consultation Fee', amount=advocate_fee, status='Paid')
+    fee2 = FeeEntry(case_id=new_case.id, description='Platform Fee', amount=platform_fee, status='Paid')
     db.session.add(fee1)
     db.session.add(fee2)
-    payment1 = Payment(user_id=current_user.id, case_id=new_case.id, amount=session.get('advocate_fee', 1200), payment_type='Consultation Fee', status='Paid')
-    payment2 = Payment(user_id=current_user.id, case_id=new_case.id, amount=session.get('platform_fee', 149), payment_type='Platform Fee', status='Paid')
+    payment1 = Payment(user_id=current_user.id, case_id=new_case.id, amount=advocate_fee, payment_type='Consultation Fee', status='Paid')
+    payment2 = Payment(user_id=current_user.id, case_id=new_case.id, amount=platform_fee, payment_type='Platform Fee', status='Paid')
     db.session.add(payment1)
     db.session.add(payment2)
     notif = Notification(user_id=current_user.id, title='Case Created', message=f'Your case for {session.get("legal_area", "")} has been created successfully.')
@@ -282,7 +298,12 @@ def consult_confirmation():
 
     for key in ['advocate_name', 'advocate_fee', 'platform_fee', 'legal_area', 'sub_type', 'state', 'district', 'fee_range', 'language', 'experience', 'description', 'selected_lawyer_id']:
         session.pop(key, None)
-    return render_template('consult_confirmation.html')
+
+    return render_template('consult_confirmation.html',
+                         advocate_name=advocate_name,
+                         advocate_fee=advocate_fee,
+                         platform_fee=platform_fee,
+                         total_paid=total_paid)
 
 # ---------- Client Engage Module ----------
 @app.route('/my-cases')
@@ -547,15 +568,40 @@ def lawyer_dashboard():
         return redirect(url_for('index'))
     if current_user.verification_status != 'verified':
         return redirect(url_for('lawyer_pending'))
-    pending_requests = ConsultationRequest.query.filter_by(status='Pending').all()
-    active_cases = Case.query.all()
+    pending_requests = ConsultationRequest.query.filter_by(
+        lawyer_id=current_user.id,
+        status='Pending'
+    ).all()
+    active_cases = Case.query.filter_by(lawyer_id=current_user.id).all()
     total_earnings = sum([c.total_paid for c in active_cases])
     unread_messages = Message.query.filter_by(sender='client').count()
+    unread_notifications = LawyerNotification.query.filter_by(lawyer_id=current_user.id, is_read=False).count()
     return render_template('lawyer_dashboard.html',
                          pending_requests=pending_requests,
                          active_cases=active_cases,
                          total_earnings=total_earnings,
-                         unread_messages=unread_messages)
+                         unread_messages=unread_messages,
+                         unread_notifications=unread_notifications)
+
+# Lawyer Notifications
+@app.route('/lawyer/notifications')
+@login_required
+def lawyer_notifications():
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('index'))
+    notifs = LawyerNotification.query.filter_by(lawyer_id=current_user.id).order_by(LawyerNotification.created_at.desc()).all()
+    return render_template('lawyer_notifications.html', notifications=notifs)
+
+@app.route('/lawyer/notifications/read/<int:notif_id>')
+@login_required
+def mark_lawyer_notification_read(notif_id):
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('index'))
+    notif = db.session.get(LawyerNotification, notif_id)
+    if notif and notif.lawyer_id == current_user.id:
+        notif.is_read = True
+        db.session.commit()
+    return redirect(url_for('lawyer_notifications'))
 
 @app.route('/lawyer/profile')
 @login_required
@@ -624,9 +670,19 @@ def lawyer_requests():
 @app.route('/lawyer/request/<int:req_id>/accept')
 @login_required
 def accept_request(req_id):
-    req = ConsultationRequest.query.get(req_id)
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('index'))
+    req = db.session.get(ConsultationRequest, req_id)
     if req:
         req.status = 'Accepted'
+        db.session.commit()
+        # Notify client
+        client_notif = Notification(
+            user_id=req.client_id,
+            title='Request Accepted',
+            message=f'Your consultation request has been accepted by {req.lawyer.name or req.lawyer.phone}.'
+        )
+        db.session.add(client_notif)
         db.session.commit()
         flash('Request accepted!', 'success')
     return redirect(url_for('lawyer_requests'))
@@ -634,7 +690,9 @@ def accept_request(req_id):
 @app.route('/lawyer/request/<int:req_id>/decline')
 @login_required
 def decline_request(req_id):
-    req = ConsultationRequest.query.get(req_id)
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('index'))
+    req = db.session.get(ConsultationRequest, req_id)
     if req:
         req.status = 'Declined'
         db.session.commit()
@@ -646,7 +704,7 @@ def decline_request(req_id):
 def lawyer_cases():
     if not isinstance(current_user, Lawyer):
         return redirect(url_for('index'))
-    cases = Case.query.all()
+    cases = Case.query.filter_by(lawyer_id=current_user.id).all()
     return render_template('lawyer_cases.html', cases=cases)
 
 @app.route('/lawyer/case/<int:case_id>')
@@ -654,7 +712,7 @@ def lawyer_cases():
 def lawyer_case_detail(case_id):
     if not isinstance(current_user, Lawyer):
         return redirect(url_for('index'))
-    case = Case.query.get(case_id)
+    case = db.session.get(Case, case_id)
     if not case:
         return redirect(url_for('lawyer_cases'))
     timeline = TimelineEvent.query.filter_by(case_id=case.id).order_by(TimelineEvent.created_at.desc()).all()
@@ -665,7 +723,7 @@ def lawyer_case_detail(case_id):
 @app.route('/lawyer/case/<int:case_id>/log-hearing', methods=['POST'])
 @login_required
 def lawyer_log_hearing(case_id):
-    case = Case.query.get(case_id)
+    case = db.session.get(Case, case_id)
     if not case:
         return redirect(url_for('lawyer_cases'))
     description = request.form.get('description', 'Hearing attended')
@@ -682,7 +740,7 @@ def lawyer_log_hearing(case_id):
 @app.route('/lawyer/case/<int:case_id>/message', methods=['POST'])
 @login_required
 def lawyer_send_message(case_id):
-    case = Case.query.get(case_id)
+    case = db.session.get(Case, case_id)
     if not case:
         return redirect(url_for('lawyer_cases'))
     content = request.form.get('message', '').strip()
@@ -695,7 +753,7 @@ def lawyer_send_message(case_id):
 @app.route('/lawyer/case/<int:case_id>/upload', methods=['POST'])
 @login_required
 def lawyer_upload_document(case_id):
-    case = Case.query.get(case_id)
+    case = db.session.get(Case, case_id)
     if not case:
         return redirect(url_for('lawyer_cases'))
     if 'document' in request.files:
@@ -765,7 +823,7 @@ def admin_lawyers():
 def admin_verify_lawyer(lawyer_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    lawyer = Lawyer.query.get(lawyer_id)
+    lawyer = db.session.get(Lawyer, lawyer_id)
     if lawyer:
         lawyer.verification_status = 'verified'
         db.session.commit()
@@ -777,7 +835,7 @@ def admin_verify_lawyer(lawyer_id):
 def admin_reject_lawyer(lawyer_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    lawyer = Lawyer.query.get(lawyer_id)
+    lawyer = db.session.get(Lawyer, lawyer_id)
     if lawyer:
         lawyer.verification_status = 'rejected'
         db.session.commit()
@@ -789,7 +847,7 @@ def admin_reject_lawyer(lawyer_id):
 def admin_suspend_lawyer(lawyer_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    lawyer = Lawyer.query.get(lawyer_id)
+    lawyer = db.session.get(Lawyer, lawyer_id)
     if lawyer:
         lawyer.verification_status = 'suspended'
         db.session.commit()
@@ -801,7 +859,7 @@ def admin_suspend_lawyer(lawyer_id):
 def admin_unsuspend_lawyer(lawyer_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    lawyer = Lawyer.query.get(lawyer_id)
+    lawyer = db.session.get(Lawyer, lawyer_id)
     if lawyer:
         lawyer.verification_status = 'verified'
         db.session.commit()
@@ -826,7 +884,7 @@ def admin_clients():
 def admin_suspend_client(client_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    client = User.query.get(client_id)
+    client = db.session.get(User, client_id)
     if client:
         client.is_active = False
         db.session.commit()
@@ -838,7 +896,7 @@ def admin_suspend_client(client_id):
 def admin_unsuspend_client(client_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    client = User.query.get(client_id)
+    client = db.session.get(User, client_id)
     if client:
         client.is_active = True
         db.session.commit()
@@ -902,7 +960,7 @@ def admin_cases():
 def admin_case_detail(case_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    case = Case.query.get(case_id)
+    case = db.session.get(Case, case_id)
     if not case:
         return redirect(url_for('admin_cases'))
     timeline = TimelineEvent.query.filter_by(case_id=case.id).order_by(TimelineEvent.created_at.desc()).all()
@@ -946,7 +1004,7 @@ def admin_contact():
 def admin_mark_message_read(msg_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    msg = ContactMessage.query.get(msg_id)
+    msg = db.session.get(ContactMessage, msg_id)
     if msg:
         msg.is_read = True
         db.session.commit()
@@ -957,7 +1015,7 @@ def admin_mark_message_read(msg_id):
 def admin_delete_message(msg_id):
     if not isinstance(current_user, Admin):
         return redirect(url_for('index'))
-    msg = ContactMessage.query.get(msg_id)
+    msg = db.session.get(ContactMessage, msg_id)
     if msg:
         db.session.delete(msg)
         db.session.commit()
