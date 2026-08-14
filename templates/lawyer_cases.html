@@ -8,14 +8,16 @@
     </a>
 </div>
 
-<div class="card mt-4 p-4">
+<div class="card mt-4 p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
     {% if cases %}
         {% for case in cases %}
         <div class="d-flex justify-content-between align-items-center p-3 mb-3" style="background: #0a1628; border-radius: 10px; border: 1px solid #1e3a5f;">
             <div>
-                <strong>{{ case.legal_area | title }} - {{ case.sub_type | replace('_', ' ') | title }}</strong>
+                <strong style="color: #ffffff;">{{ case.legal_area | title }} - {{ case.sub_type | replace('_', ' ') | title }}</strong>
                 <br>
-                <small class="text-muted">Client: {{ case.client.phone }}</small>
+                <small class="text-muted">
+                    Client: {% if case.client %}{{ case.client.name or case.client.phone }}{% else %}Not provided{% endif %}
+                </small>
                 <br>
                 <small class="text-muted">Status: {{ case.status }}</small>
             </div>
