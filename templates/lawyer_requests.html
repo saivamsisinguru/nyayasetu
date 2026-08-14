@@ -15,26 +15,38 @@
             <div>
                 <strong>{{ req.legal_area | title }} - {{ req.sub_type | replace('_', ' ') | title }}</strong>
                 <br>
-                <small class="text-muted">Client: {{ req.client.phone }}</small>
+                <small class="text-muted">
+                    Client: {% if req.client %}{{ req.client.name or req.client.phone }}{% else %}Not provided{% endif %}
+                </small>
                 <br>
-                <small class="text-muted">City: {{ req.city }}</small>
+                <small class="text-muted">
+                    Location: 
+                    {% if req.district %}
+                        {{ req.district }}, {{ req.state }}
+                    {% elif req.state %}
+                        {{ req.state }}
+                    {% else %}
+                        Not provided
+                    {% endif %}
+                </small>
                 {% if req.description %}
-                <br><small class="text-muted">Description: {{ req.description[:100] }}...</small>
+                <br><small class="text-muted">Description: {{ req.description[:100] }}{% if req.description|length > 100 %}...{% endif %}</small>
+                {% else %}
+                <br><small class="text-muted">No description provided by client.</small>
                 {% endif %}
-                <br>
-                <small class="text-muted">Requested: {{ req.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                <br><small class="text-muted">Requested: {{ req.created_at.strftime('%d %b %Y, %H:%M') }}</small>
             </div>
             <div class="text-end">
                 {% if req.status == 'Pending' %}
-                <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Pending</span>
+                <span class="badge bg-warning">Pending</span>
                 <div class="mt-2">
                     <a href="{{ url_for('accept_request', req_id=req.id) }}" class="btn btn-sm btn-accent">Accept</a>
                     <a href="{{ url_for('decline_request', req_id=req.id) }}" class="btn btn-sm btn-outline-secondary">Decline</a>
                 </div>
                 {% elif req.status == 'Accepted' %}
-                <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Accepted</span>
+                <span class="badge bg-success">Accepted</span>
                 {% else %}
-                <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Declined</span>
+                <span class="badge bg-danger">Declined</span>
                 {% endif %}
             </div>
         </div>
