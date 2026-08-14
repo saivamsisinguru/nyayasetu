@@ -4,7 +4,7 @@ from config import Config
 from models import (db, User, Lawyer, Admin, Case, Document, Message, TimelineEvent,
                     FeeEntry, CaseUpdate, Notification, Payment, ConsultationRequest,
                     LawyerRegion, LawyerLanguage, LawyerPracticeArea,
-                    ContactDetails, ContactMessage, LawyerNotification)
+                    ContactDetails, ContactMessage, LawyerNotification, HearingUpdate)
 from datetime import datetime
 import os
 import random
@@ -347,7 +347,8 @@ def case_detail(case_id):
     documents = Document.query.filter_by(case_id=case.id).order_by(Document.uploaded_at.desc()).all()
     messages = Message.query.filter_by(case_id=case.id).order_by(Message.created_at.asc()).all()
     updates = CaseUpdate.query.filter_by(case_id=case.id).order_by(CaseUpdate.created_at.desc()).all()
-    return render_template('case_detail.html', case=case, timeline=timeline, fees=fees, documents=documents, messages=messages, updates=updates)
+    hearings = HearingUpdate.query.filter_by(case_id=case.id).order_by(HearingUpdate.created_at.desc()).all()
+    return render_template('case_detail.html', case=case, timeline=timeline, fees=fees, documents=documents, messages=messages, updates=updates, hearings=hearings)
 
 @app.route('/case/<int:case_id>/upload', methods=['POST'])
 @login_required
@@ -568,10 +569,7 @@ def lawyer_dashboard():
         return redirect(url_for('index'))
     if current_user.verification_status != 'verified':
         return redirect(url_for('lawyer_pending'))
-    pending_requests = ConsultationRequest.query.filter_by(
-        lawyer_id=current_user.id,
-        status='Pending'
-    ).all()
+    pending_requests = ConsultationRequest.query.filter_by(lawyer_id=current_user.id, status='Pending').all()
     active_cases = Case.query.filter_by(lawyer_id=current_user.id).all()
     total_earnings = sum([c.total_paid for c in active_cases])
     unread_messages = Message.query.filter_by(sender='client').count()
@@ -583,7 +581,6 @@ def lawyer_dashboard():
                          unread_messages=unread_messages,
                          unread_notifications=unread_notifications)
 
-# Lawyer Notifications
 @app.route('/lawyer/notifications')
 @login_required
 def lawyer_notifications():
@@ -675,6 +672,7 @@ def accept_request(req_id):
     req = db.session.get(ConsultationRequest, req_id)
     if req:
         req.status = 'Accepted'
+        req.responded_at = datetime.utcnow()
         db.session.commit()
         # Notify client
         client_notif = Notification(
@@ -695,6 +693,7 @@ def decline_request(req_id):
     req = db.session.get(ConsultationRequest, req_id)
     if req:
         req.status = 'Declined'
+        req.responded_at = datetime.utcnow()
         db.session.commit()
         flash('Request declined.', 'info')
     return redirect(url_for('lawyer_requests'))
@@ -718,25 +717,86 @@ def lawyer_case_detail(case_id):
     timeline = TimelineEvent.query.filter_by(case_id=case.id).order_by(TimelineEvent.created_at.desc()).all()
     messages = Message.query.filter_by(case_id=case.id).order_by(Message.created_at.asc()).all()
     documents = Document.query.filter_by(case_id=case.id).all()
-    return render_template('lawyer_case_detail.html', case=case, timeline=timeline, messages=messages, documents=documents)
+    hearings = HearingUpdate.query.filter_by(case_id=case.id).order_by(HearingUpdate.created_at.desc()).all()
+    return render_template('lawyer_case_detail.html', case=case, timeline=timeline, messages=messages, documents=documents, hearings=hearings)
+
+@app.route('/lawyer/case/<int:case_id>/hearing-update', methods=['GET', 'POST'])
+@login_required
+def lawyer_hearing_update(case_id):
+    if not isinstance(current_user, Lawyer):
+        return redirect(url_for('index'))
+    case = db.session.get(Case, case_id)
+    if not case:
+        return redirect(url_for('lawyer_cases'))
+    if request.method == 'POST':
+        hearing_date_str = request.form.get('hearing_date')
+        outcome = request.form.get('outcome', '').strip()
+        next_hearing_date_str = request.form.get('next_hearing_date')
+        notes = request.form.get('notes', '').strip()
+        hearing_date = None
+        next_hearing_date = None
+        if hearing_date_str:
+            try:
+                hearing_date = datetime.strptime(hearing_date_str, '%Y-%m-%dT%H:%M')
+            except:
+                pass
+        if next_hearing_date_str:
+            try:
+                next_hearing_date = datetime.strptime(next_hearing_date_str, '%Y-%m-%dT%H:%M')
+            except:
+                pass
+
+        # Create hearing update
+        hu = HearingUpdate(
+            case_id=case_id,
+            lawyer_id=current_user.id,
+            hearing_date=hearing_date,
+            outcome=outcome,
+            next_hearing_date=next_hearing_date,
+            notes=notes
+        )
+        db.session.add(hu)
+
+        # Update case
+        case.hearing_date = hearing_date
+        case.next_hearing_date = next_hearing_date
+        if outcome:
+            case.status = 'Hearing Updated'
+        else:
+            case.status = 'Hearing Completed'
+
+        # Add timeline event
+        event_desc = f'Hearing update by {current_user.name or current_user.phone}'
+        if hearing_date:
+            event_desc += f' on {hearing_date.strftime("%d %b %Y %H:%M")}'
+        event = TimelineEvent(case_id=case_id, event_type='Hearing Update', description=event_desc)
+        db.session.add(event)
+
+        # Add fee entry (optional)
+        hearing_fee = current_user.hearing_fee if current_user.hearing_fee else 5000
+        fee = FeeEntry(case_id=case_id, description='Hearing Fee', amount=hearing_fee, status='Pending')
+        db.session.add(fee)
+
+        # Notify client
+        client_notif = Notification(
+            user_id=case.user_id,
+            title='Hearing Update',
+            message=f'Your advocate has provided a hearing update: {outcome[:100] if outcome else "Please check your case for details."}'
+        )
+        db.session.add(client_notif)
+
+        db.session.commit()
+        flash('Hearing update submitted successfully!', 'success')
+        return redirect(url_for('lawyer_case_detail', case_id=case_id))
+    return render_template('lawyer_hearing_update.html', case=case)
 
 @app.route('/lawyer/case/<int:case_id>/log-hearing', methods=['POST'])
 @login_required
 def lawyer_log_hearing(case_id):
-    case = db.session.get(Case, case_id)
-    if not case:
-        return redirect(url_for('lawyer_cases'))
-    description = request.form.get('description', 'Hearing attended')
-    hearing_fee = current_user.hearing_fee if hasattr(current_user, 'hearing_fee') else 5000
-    event = TimelineEvent(case_id=case_id, event_type='Hearing', description=description)
-    db.session.add(event)
-    fee = FeeEntry(case_id=case_id, description=description, amount=hearing_fee, status='Pending')
-    db.session.add(fee)
-    case.status = 'Hearing Completed'
-    db.session.commit()
-    flash(f'Hearing logged. Fee of ₹{hearing_fee} added to client ledger.', 'success')
-    return redirect(url_for('lawyer_case_detail', case_id=case_id))
+    # Redirect to new hearing update page
+    return redirect(url_for('lawyer_hearing_update', case_id=case_id))
 
+# Keep old message and upload routes
 @app.route('/lawyer/case/<int:case_id>/message', methods=['POST'])
 @login_required
 def lawyer_send_message(case_id):
