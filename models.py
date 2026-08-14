@@ -20,8 +20,6 @@ class User(UserMixin, db.Model):
 
     cases = db.relationship('Case', backref='client', lazy=True)
     notifications = db.relationship('Notification', backref='user', lazy=True)
-    # No direct payments relationship to avoid backref conflict
-    # Access payments via Payment.user backref='payment_records'
 
 class Lawyer(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -75,6 +73,7 @@ class ConsultationRequest(db.Model):
     fee_range_max = db.Column(db.Integer)
     language = db.Column(db.String(50))
     status = db.Column(db.String(20), default='Pending')
+    responded_at = db.Column(db.DateTime)   # <-- added for analytics
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     client = db.relationship('User', backref='consultation_requests')
@@ -91,6 +90,8 @@ class Case(db.Model):
     district = db.Column(db.String(100))
     description = db.Column(db.Text)
     status = db.Column(db.String(50), default='Active')
+    hearing_date = db.Column(db.DateTime)              # <-- added
+    next_hearing_date = db.Column(db.DateTime)         # <-- added
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     advocate_fee = db.Column(db.Integer, default=0)
@@ -103,6 +104,17 @@ class Case(db.Model):
     timeline_events = db.relationship('TimelineEvent', backref='case', lazy=True)
     fee_entries = db.relationship('FeeEntry', backref='case', lazy=True)
     case_updates = db.relationship('CaseUpdate', backref='case', lazy=True)
+    hearing_updates = db.relationship('HearingUpdate', backref='case', lazy=True, cascade='all, delete-orphan')
+
+class HearingUpdate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    case_id = db.Column(db.Integer, db.ForeignKey('case.id'), nullable=False)
+    lawyer_id = db.Column(db.Integer, db.ForeignKey('lawyer.id'), nullable=False)
+    hearing_date = db.Column(db.DateTime)
+    outcome = db.Column(db.Text)
+    next_hearing_date = db.Column(db.DateTime)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
