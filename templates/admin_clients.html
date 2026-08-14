@@ -11,41 +11,41 @@
     </a>
 </div>
 
-<div class="card mt-4 p-4">
+<div class="card mt-4 p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
     {% if clients %}
     <div class="table-responsive">
-        <table class="table">
+        <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                    <th>State</th>
-                    <th>District</th>
-                    <th>Cases</th>
-                    <th>Total Paid (₹)</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Name</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Phone</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Email</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">State</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">District</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Cases</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Total Paid (₹)</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Status</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for client in clients %}
                 <tr>
-                    <td>{{ client.name or 'N/A' }}</td>
-                    <td>{{ client.phone }}</td>
-                    <td>{{ client.email or 'N/A' }}</td>
-                    <td>{{ client.state or 'N/A' }}</td>
-                    <td>{{ client.district or 'N/A' }}</td>
-                    <td>{{ client.cases|length }}</td>
-                    <td>₹{{ client.total_paid }}</td>
-                    <td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ client.name or 'N/A' }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ client.phone }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ client.email or 'N/A' }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ client.state or 'N/A' }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ client.district or 'N/A' }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ client.cases|length }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">₹{{ client.total_paid }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
                         {% if client.is_active %}
-                        <span class="badge bg-success">Active</span>
+                        <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981;">Active</span>
                         {% else %}
-                        <span class="badge bg-danger">Suspended</span>
+                        <span class="badge" style="background: rgba(239,68,68,0.2); color: #ef4444;">Suspended</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
                         {% if client.is_active %}
                         <a href="{{ url_for('admin_suspend_client', client_id=client.id) }}" class="btn btn-sm btn-outline-warning">Suspend</a>
                         {% else %}
