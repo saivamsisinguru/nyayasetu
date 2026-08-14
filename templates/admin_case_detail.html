@@ -12,13 +12,13 @@
 </div>
 
 <!-- Case Overview -->
-<div class="card mt-4 p-4">
+<div class="card mt-4 p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
     <div class="row">
         <div class="col-md-6">
             <p class="mb-2"><strong style="color: #a0b4c8;">Client:</strong> {{ case.client.phone if case.client else 'N/A' }}</p>
             <p class="mb-2"><strong style="color: #a0b4c8;">Advocate:</strong> {{ case.advocate_name or 'N/A' }}</p>
             <p class="mb-2"><strong style="color: #a0b4c8;">State / District:</strong> {{ case.state or 'N/A' }} / {{ case.district or 'N/A' }}</p>
-            <p class="mb-2"><strong style="color: #a0b4c8;">Status:</strong> <span class="badge bg-success">{{ case.status }}</span></p>
+            <p class="mb-2"><strong style="color: #a0b4c8;">Status:</strong> <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981;">{{ case.status }}</span></p>
         </div>
         <div class="col-md-6">
             <p class="mb-2"><strong style="color: #a0b4c8;">Total Paid:</strong> ₹{{ case.total_paid }}</p>
@@ -32,30 +32,30 @@
 </div>
 
 <!-- Tabs -->
-<ul class="nav nav-tabs mt-4" id="adminCaseTabs" role="tablist">
+<ul class="nav nav-tabs mt-4" id="adminCaseTabs" role="tablist" style="border-bottom: 1px solid #1e3a5f;">
     <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#timeline" type="button">Timeline</button>
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#timeline" style="color: #ff6b35; border-bottom: 2px solid #ff6b35; background: transparent;">Timeline</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#fees" type="button">Fee Ledger</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#fees" style="color: #a0b4c8;">Fee Ledger</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#documents" type="button">Documents</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#documents" style="color: #a0b4c8;">Documents</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#messages" type="button">Messages</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#messages" style="color: #a0b4c8;">Messages</button>
     </li>
 </ul>
 
 <div class="tab-content mt-3">
     <!-- Timeline -->
     <div class="tab-pane fade show active" id="timeline">
-        <div class="card p-4">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
             {% if timeline %}
             <ul class="list-group list-group-flush">
                 {% for event in timeline %}
-                <li class="list-group-item" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
-                    <span class="badge bg-primary">{{ event.event_type }}</span>
+                <li class="list-group-item" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: #ffffff;">
+                    <span class="badge" style="background: rgba(255,107,53,0.2); color: #ff6b35;">{{ event.event_type }}</span>
                     {{ event.description }}
                     <br><small class="text-muted">{{ event.created_at.strftime('%d %b %Y, %H:%M') }}</small>
                 </li>
@@ -69,29 +69,29 @@
 
     <!-- Fee Ledger -->
     <div class="tab-pane fade" id="fees">
-        <div class="card p-4">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
             {% if fees %}
             <div class="table-responsive">
-                <table class="table" style="background: #0d1f3c; border-radius: 12px;">
+                <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
                     <thead>
                         <tr>
-                            <th style="background: #0a1628; color: #a0b4c8;">Date</th>
-                            <th style="background: #0a1628; color: #a0b4c8;">Description</th>
-                            <th style="background: #0a1628; color: #a0b4c8;">Amount</th>
-                            <th style="background: #0a1628; color: #a0b4c8;">Status</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Date</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Description</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Amount</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for fee in fees %}
                         <tr>
-                            <td>{{ fee.created_at.strftime('%d %b %Y') }}</td>
-                            <td>{{ fee.description }}</td>
-                            <td>₹{{ fee.amount }}</td>
-                            <td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ fee.created_at.strftime('%d %b %Y') }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ fee.description }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">₹{{ fee.amount }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
                                 {% if fee.status == 'Paid' %}
-                                <span class="badge bg-success">Paid</span>
+                                <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981;">Paid</span>
                                 {% else %}
-                                <span class="badge bg-warning">Pending</span>
+                                <span class="badge" style="background: rgba(245,158,11,0.2); color: #f59e0b;">Pending</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -107,11 +107,11 @@
 
     <!-- Documents -->
     <div class="tab-pane fade" id="documents">
-        <div class="card p-4">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
             {% if documents %}
             <ul class="list-group">
                 {% for doc in documents %}
-                <li class="list-group-item d-flex justify-content-between">
+                <li class="list-group-item d-flex justify-content-between align-items-center" style="background: #0d1f3c; border: 1px solid #1e3a5f; color: #ffffff;">
                     <span><i class="bi bi-file-earmark-text me-2 text-accent"></i>{{ doc.filename }}</span>
                     <small class="text-muted">{{ doc.uploaded_at.strftime('%d %b %Y, %H:%M') }}</small>
                 </li>
@@ -125,12 +125,12 @@
 
     <!-- Messages -->
     <div class="tab-pane fade" id="messages">
-        <div class="card p-4">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
             {% if messages %}
                 {% for msg in messages %}
                 <div class="mb-3 p-3" style="background: #0a1628; border-radius: 10px; border: 1px solid #1e3a5f;">
                     <strong style="color: #ff6b35;">{{ 'Client' if msg.sender == 'client' else 'Lawyer' }}:</strong>
-                    <span>{{ msg.content }}</span>
+                    <span style="color: #ffffff;">{{ msg.content }}</span>
                     <br><small class="text-muted">{{ msg.created_at.strftime('%d %b, %H:%M') }}</small>
                 </div>
                 {% endfor %}
