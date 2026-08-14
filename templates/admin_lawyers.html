@@ -12,7 +12,7 @@
 </div>
 
 <!-- Filter Tabs -->
-<ul class="nav nav-tabs mt-4" style="border-bottom: 1px solid #1e3a5f;">
+<ul class="nav nav-tabs mt-4" id="lawyerTabs" role="tablist" style="border-bottom: 1px solid #1e3a5f;">
     <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all" style="color: #ff6b35; border-bottom: 2px solid #ff6b35;">All</button>
     </li>
@@ -24,6 +24,9 @@
     </li>
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#rejected" style="color: #a0b4c8;">Rejected</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#suspended" style="color: #a0b4c8;">Suspended</button>
     </li>
 </ul>
 
@@ -85,7 +88,147 @@
         </div>
     </div>
 
-    <!-- Pending Only (simplified: we can use same table but filtered via Jinja, but for brevity we keep same structure; the tab pane content can be omitted or duplicated. For completeness, we'll just show the same "all" table but filtered. However, to avoid complexity, we'll just render all again in each tab by using a condition. Since we have the full list in `lawyers`, we can simply display the same table for each tab by applying Jinja filters. But we'll keep the current structure and assume the filter tabs are visual only. For now, this will still show all lawyers in all tabs unless we add JS filtering. Acceptable for now.)
-    <!-- Other tabs can be copied similarly with filtered content if desired, but we'll leave as is to avoid repetition -->
+    <!-- Pending Lawyers -->
+    <div class="tab-pane fade" id="pending">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
+            {% set pending_lawyers = lawyers | selectattr('verification_status', 'equalto', 'pending') | list %}
+            {% if pending_lawyers %}
+            <div class="table-responsive">
+                <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
+                    <thead>
+                        <tr>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Name</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Phone</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Bar Council ID</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Fee (₹)</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in pending_lawyers %}
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.name or 'N/A' }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.phone }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.bar_council_id or 'N/A' }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">₹{{ lawyer.consultation_fee }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
+                                <a href="{{ url_for('admin_verify_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-success">Approve</a>
+                                <a href="{{ url_for('admin_reject_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-danger">Reject</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No pending lawyers.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Verified Lawyers -->
+    <div class="tab-pane fade" id="verified">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
+            {% set verified_lawyers = lawyers | selectattr('verification_status', 'equalto', 'verified') | list %}
+            {% if verified_lawyers %}
+            <div class="table-responsive">
+                <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
+                    <thead>
+                        <tr>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Name</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Phone</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Experience</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Fee (₹)</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in verified_lawyers %}
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.name or 'N/A' }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.phone }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.experience_level }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">₹{{ lawyer.consultation_fee }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
+                                <a href="{{ url_for('admin_suspend_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-outline-warning">Suspend</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No verified lawyers.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Rejected Lawyers -->
+    <div class="tab-pane fade" id="rejected">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
+            {% set rejected_lawyers = lawyers | selectattr('verification_status', 'equalto', 'rejected') | list %}
+            {% if rejected_lawyers %}
+            <div class="table-responsive">
+                <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
+                    <thead>
+                        <tr>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Name</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Phone</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Bar Council ID</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in rejected_lawyers %}
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.name or 'N/A' }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.phone }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.bar_council_id or 'N/A' }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
+                                <a href="{{ url_for('admin_verify_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-success">Re-approve</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No rejected lawyers.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Suspended Lawyers -->
+    <div class="tab-pane fade" id="suspended">
+        <div class="card p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
+            {% set suspended_lawyers = lawyers | selectattr('verification_status', 'equalto', 'suspended') | list %}
+            {% if suspended_lawyers %}
+            <div class="table-responsive">
+                <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
+                    <thead>
+                        <tr>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Name</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Phone</th>
+                            <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lawyer in suspended_lawyers %}
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.name or 'N/A' }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ lawyer.phone }}</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
+                                <a href="{{ url_for('admin_unsuspend_lawyer', lawyer_id=lawyer.id) }}" class="btn btn-sm btn-outline-success">Unsuspend</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No suspended lawyers.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}
