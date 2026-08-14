@@ -12,10 +12,10 @@
 </div>
 
 <!-- Filters -->
-<div class="card mt-4 p-3">
+<div class="card mt-4 p-3" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
     <form method="GET" action="{{ url_for('admin_requests') }}" class="row g-2">
         <div class="col-md-3">
-            <select class="form-select" name="status">
+            <select class="form-select" name="status" style="background: #0a1628; color: #ffffff; border: 1px solid #1e3a5f;">
                 <option value="">All Statuses</option>
                 <option value="Pending" {% if request.args.get('status') == 'Pending' %}selected{% endif %}>Pending</option>
                 <option value="Accepted" {% if request.args.get('status') == 'Accepted' %}selected{% endif %}>Accepted</option>
@@ -23,7 +23,7 @@
             </select>
         </div>
         <div class="col-md-3">
-            <select class="form-select" name="legal_area">
+            <select class="form-select" name="legal_area" style="background: #0a1628; color: #ffffff; border: 1px solid #1e3a5f;">
                 <option value="">All Areas</option>
                 <option value="property" {% if request.args.get('legal_area') == 'property' %}selected{% endif %}>Property</option>
                 <option value="family" {% if request.args.get('legal_area') == 'family' %}selected{% endif %}>Family</option>
@@ -42,37 +42,37 @@
 </div>
 
 <!-- Requests Table -->
-<div class="card mt-4 p-4">
+<div class="card mt-4 p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
     {% if requests %}
     <div class="table-responsive">
-        <table class="table">
+        <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Client</th>
-                    <th>Lawyer</th>
-                    <th>Area</th>
-                    <th>State / District</th>
-                    <th>Fee Range</th>
-                    <th>Status</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Date</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Client</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Lawyer</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Area</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">State / District</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Fee Range</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for req in requests %}
                 <tr>
-                    <td>{{ req.created_at.strftime('%d %b %Y, %H:%M') }}</td>
-                    <td>{{ req.client.phone }}</td>
-                    <td>{{ req.lawyer.name or req.lawyer.phone }}</td>
-                    <td>{{ req.legal_area | title }} - {{ req.sub_type | replace('_',' ') | title }}</td>
-                    <td>{{ req.state }} / {{ req.district }}</td>
-                    <td>₹{{ req.fee_range_min }} - ₹{{ req.fee_range_max }}</td>
-                    <td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ req.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ req.client.phone }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ req.lawyer.name or req.lawyer.phone }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ req.legal_area | title }} - {{ req.sub_type | replace('_',' ') | title }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ req.state }} / {{ req.district }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">₹{{ req.fee_range_min }} - ₹{{ req.fee_range_max }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
                         {% if req.status == 'Pending' %}
-                        <span class="badge bg-warning">Pending</span>
+                        <span class="badge" style="background: rgba(245,158,11,0.2); color: #f59e0b;">Pending</span>
                         {% elif req.status == 'Accepted' %}
-                        <span class="badge bg-success">Accepted</span>
+                        <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981;">Accepted</span>
                         {% else %}
-                        <span class="badge bg-danger">Declined</span>
+                        <span class="badge" style="background: rgba(239,68,68,0.2); color: #ef4444;">Declined</span>
                         {% endif %}
                     </td>
                 </tr>
