@@ -11,14 +11,14 @@
     </a>
 </div>
 
-<!-- Search/Filter (optional) -->
-<div class="card mt-4 p-3">
+<!-- Search/Filter -->
+<div class="card mt-4 p-3" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
     <form method="GET" action="{{ url_for('admin_cases') }}" class="row g-2">
         <div class="col-md-4">
-            <input type="text" class="form-control" name="q" placeholder="Search by client, lawyer, area..." value="{{ request.args.get('q', '') }}">
+            <input type="text" class="form-control" name="q" placeholder="Search by client, lawyer, area..." value="{{ request.args.get('q', '') }}" style="background: #0a1628; color: #ffffff; border: 1px solid #1e3a5f;">
         </div>
         <div class="col-md-3">
-            <select class="form-select" name="status">
+            <select class="form-select" name="status" style="background: #0a1628; color: #ffffff; border: 1px solid #1e3a5f;">
                 <option value="">All Statuses</option>
                 <option value="Active" {% if request.args.get('status') == 'Active' %}selected{% endif %}>Active</option>
                 <option value="Resolved" {% if request.args.get('status') == 'Resolved' %}selected{% endif %}>Resolved</option>
@@ -33,35 +33,35 @@
 </div>
 
 <!-- Cases Table -->
-<div class="card mt-4 p-4">
+<div class="card mt-4 p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
     {% if cases %}
     <div class="table-responsive">
-        <table class="table">
+        <table class="table" style="background: #0d1f3c; color: #ffffff; border-radius: 12px;">
             <thead>
                 <tr>
-                    <th>Case ID</th>
-                    <th>Client</th>
-                    <th>Lawyer</th>
-                    <th>Area</th>
-                    <th>Status</th>
-                    <th>Total Paid (₹)</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Case ID</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Client</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Lawyer</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Area</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Status</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Total Paid (₹)</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Created</th>
+                    <th style="background: #0a1628; color: #a0b4c8; border-bottom: 1px solid #1e3a5f; padding: 15px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for case in cases %}
                 <tr>
-                    <td>#{{ case.id }}</td>
-                    <td>{{ case.client.phone if case.client else 'N/A' }}</td>
-                    <td>{{ case.advocate_name or 'N/A' }}</td>
-                    <td>{{ case.legal_area | title }} - {{ case.sub_type | replace('_',' ') | title }}</td>
-                    <td>
-                        <span class="badge bg-success">{{ case.status }}</span>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">#{{ case.id }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ case.client.phone if case.client else 'N/A' }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ case.advocate_name or 'N/A' }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ case.legal_area | title }} - {{ case.sub_type | replace('_',' ') | title }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
+                        <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981;">{{ case.status }}</span>
                     </td>
-                    <td>₹{{ case.total_paid }}</td>
-                    <td>{{ case.created_at.strftime('%d %b %Y') }}</td>
-                    <td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">₹{{ case.total_paid }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">{{ case.created_at.strftime('%d %b %Y') }}</td>
+                    <td style="padding: 15px; border-bottom: 1px solid #1e3a5f; color: #ffffff;">
                         <a href="{{ url_for('admin_case_detail', case_id=case.id) }}" class="btn btn-sm btn-outline-accent">View</a>
                     </td>
                 </tr>
