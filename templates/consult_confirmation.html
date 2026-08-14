@@ -3,40 +3,23 @@
 {% block content %}
 <div class="row justify-content-center mt-5">
     <div class="col-md-6 text-center">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-check-circle-fill text-success" viewBox="0 0 16 16">
-                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-                    </svg>
-                </div>
-                
-                <h3>Payment Successful!</h3>
-                <h5 class="text-muted mt-2">Your consultation is confirmed.</h5>
-                
-                <hr>
-                
-                <div class="text-start mb-3">
-                    <p><strong>Advocate:</strong> {{ session.get('advocate_name', 'Adv. Priya Menon') }}</p>
-                    <p><strong>Date & Time:</strong> Today, 7:30 PM</p>
-                    <p><strong>Duration:</strong> 30 minutes</p>
-                </div>
-                
-                <div class="alert alert-info">
-                    <strong>Video call link will appear here 10 minutes before the session.</strong>
-                </div>
-                
-                <hr>
-                
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-primary" disabled>
-                        📅 Add to Calendar (Coming Soon)
-                    </button>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
-                        Back to Dashboard
-                    </a>
-                </div>
+        <div class="card p-4">
+            <div class="mb-4">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
             </div>
+            <h3>Payment Successful!</h3>
+            <h5 class="text-muted mt-2">Your consultation is confirmed.</h5>
+            <hr>
+            <div class="text-start">
+                <p><strong>Advocate:</strong> {{ advocate_name }}</p>
+                <p><strong>Advocate Fee:</strong> ₹{{ advocate_fee }}</p>
+                <p><strong>Platform Fee:</strong> ₹{{ platform_fee }}</p>
+                <p><strong>Total Paid:</strong> ₹{{ total_paid }}</p>
+            </div>
+            <div class="alert alert-info">
+                The advocate will contact you to schedule the consultation.
+            </div>
+            <a href="{{ url_for('my_cases') }}" class="btn btn-accent w-100">View My Cases</a>
         </div>
     </div>
 </div>
