@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Hearing Update{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2><i class="bi bi-calendar-event me-2 text-accent"></i>Hearing Update</h2>
+        <p class="text-muted">Case #{{ case.id }} - {{ case.legal_area | title }} - {{ case.sub_type | replace('_',' ') | title }}</p>
+    </div>
+    <a href="{{ url_for('lawyer_case_detail', case_id=case.id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Case
+    </a>
+</div>
+
+<div class="card mt-4 p-4" style="background: #0d1f3c; border: 1px solid #1e3a5f;">
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label">Hearing Date & Time</label>
+            <input type="datetime-local" class="form-control" name="hearing_date" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Outcome / Summary</label>
+            <textarea class="form-control" name="outcome" rows="4" placeholder="Describe what happened in the hearing, orders passed, etc." required></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Next Hearing Date (if any)</label>
+            <input type="datetime-local" class="form-control" name="next_hearing_date">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Additional Notes</label>
+            <textarea class="form-control" name="notes" rows="3" placeholder="Any instructions for the client or internal notes"></textarea>
+        </div>
+        <button type="submit" class="btn btn-accent w-100 py-3">
+            <i class="bi bi-check-circle me-1"></i> Submit Hearing Update
+        </button>
+    </form>
+</div>
+{% endblock %}
